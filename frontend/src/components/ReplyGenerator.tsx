@@ -29,6 +29,9 @@ export default function ReplyGenerator({ originalText, pasteId }: ReplyGenerator
     try {
       const data = await generateReply(originalText, tone, pasteId)
       setReply(data.reply)
+      if (!data.saved) {
+        toast("Couldn't save this to your history", { icon: "⚠️" })
+      }
     } catch (err) {
       const message =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Something went wrong"

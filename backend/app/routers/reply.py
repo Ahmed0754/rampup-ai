@@ -27,7 +27,7 @@ def generate_reply(payload: ReplyRequest, user_id: str = Depends(get_current_use
         status_code = 500 if message == "API key not configured" else 502
         raise HTTPException(status_code=status_code, detail=message) from exc
 
-    save_reply(
+    reply_id = save_reply(
         user_id=user_id,
         original_text=text,
         tone=payload.tone,
@@ -35,4 +35,4 @@ def generate_reply(payload: ReplyRequest, user_id: str = Depends(get_current_use
         paste_id=payload.paste_id,
     )
 
-    return ReplyResponse(reply=reply_text, tone=payload.tone)
+    return ReplyResponse(reply=reply_text, tone=payload.tone, saved=reply_id is not None)

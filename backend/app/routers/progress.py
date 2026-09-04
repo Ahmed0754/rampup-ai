@@ -52,9 +52,11 @@ def generate_weekly_summary(payload: WeeklySummaryRequest, user_id: str = Depend
     if not entries:
         raise HTTPException(status_code=422, detail="No progress entries found for this week")
 
+    trimmed = [{"type": e["entry_type"], "text": e["entry_text"]} for e in entries]
+
     try:
         service = AIService()
-        result = service.generate_weekly_summary(entries)
+        result = service.generate_weekly_summary(trimmed)
     except AIServiceError as exc:
         message = str(exc)
         status_code = 500 if message == "API key not configured" else 502
@@ -68,6 +70,8 @@ def generate_weekly_summary(payload: WeeklySummaryRequest, user_id: str = Depend
         talking_points=result.get("talking_points", ""),
     )
 
-    save_weekly_summary(user_id=user_id, week_start=payload.week_start, summary=summary.model_dump())
+    summary_id = save_weekly_summary(
+        user_id=user_id, week_start=payload.week_start, summary=summary.model_dump()
+    )
 
-    return WeeklySummaryResponse(summary=summary)
+    return WeeklySummaryResponse(summary=summary, saved=summary_id is not None)

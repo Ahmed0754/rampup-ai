@@ -33,14 +33,19 @@ rampup-ai/
 - **Weekly Summary** — turn a week of progress entries into a status update, talking points for
   your check-in, and resume bullets.
 - **Resume Bullets** — turn rough notes about your work into strong, metric-driven resume bullets.
+- **History** — browse everything you've explained, replied to, summarized, or turned into resume
+  bullets, scoped to your account.
 
 ## Getting started
 
 ### 1. Supabase
 
 Create a Supabase project and run `supabase/schema.sql` in the SQL editor. This creates the
-`pastes`, `replies`, `progress_entries`, and `weekly_summaries` tables with row-level security
-scoped to `auth.uid()`.
+`pastes`, `replies`, `progress_entries`, `weekly_summaries`, and `resume_bullets` tables with
+row-level security scoped to `auth.uid()`.
+
+If you set the project up earlier, apply new tables by running the files in
+`supabase/migrations/` in order.
 
 ### 2. Backend
 

@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+from app.models import MAX_INPUT_CHARS
 from app.services.ai import AIServiceError
 
 EXPLAIN_RESULT = {
@@ -48,6 +49,13 @@ def test_explain_empty_text_returns_422(client, auth_headers):
     response = client.post("/api/explain", json={"text": "   "}, headers=auth_headers)
     assert response.status_code == 422
     assert response.json()["detail"] == "Please paste some text first"
+
+
+def test_explain_over_length_limit_returns_422(client, auth_headers):
+    response = client.post(
+        "/api/explain", json={"text": "x" * (MAX_INPUT_CHARS + 1)}, headers=auth_headers
+    )
+    assert response.status_code == 422
 
 
 def test_explain_missing_api_key_returns_500(client, auth_headers, monkeypatch):

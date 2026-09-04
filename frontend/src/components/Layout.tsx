@@ -7,6 +7,7 @@ const navItems = [
   { to: "/reply", label: "Reply Generator" },
   { to: "/progress", label: "Progress Tracker" },
   { to: "/resume", label: "Resume Bullets" },
+  { to: "/history", label: "History" },
 ]
 
 export default function Layout() {

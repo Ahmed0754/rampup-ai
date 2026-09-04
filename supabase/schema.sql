@@ -39,12 +39,22 @@ CREATE TABLE weekly_summaries (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE resume_bullets (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  bullets JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 ALTER TABLE pastes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE replies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE progress_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE weekly_summaries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resume_bullets ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users see own pastes" ON pastes FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users see own replies" ON replies FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users see own progress" ON progress_entries FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users see own summaries" ON weekly_summaries FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users see own resume bullets" ON resume_bullets FOR ALL USING (auth.uid() = user_id);

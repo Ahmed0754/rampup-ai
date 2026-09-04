@@ -21,6 +21,7 @@ export interface ExplainResponse {
   what_to_do_next: string
   action_items: string[]
   paste_id: string | null
+  saved: boolean
 }
 
 export type Tone = "casual" | "professional" | "manager-safe" | "confused-but-trying"
@@ -28,6 +29,7 @@ export type Tone = "casual" | "professional" | "manager-safe" | "confused-but-tr
 export interface ReplyResponse {
   reply: string
   tone: Tone
+  saved: boolean
 }
 
 export type EntryType = "win" | "learned" | "blocker" | "task_completed"

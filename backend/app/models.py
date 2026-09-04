@@ -1,9 +1,14 @@
 from typing import Optional
-from pydantic import BaseModel
+
+from pydantic import BaseModel, Field
+
+# Rough upper bound on a single pasted message / note. Keeps prompts (and cost)
+# sane and rejects accidental multi-megabyte log dumps before they reach the model.
+MAX_INPUT_CHARS = 15_000
 
 
 class ExplainRequest(BaseModel):
-    text: str
+    text: str = Field(max_length=MAX_INPUT_CHARS)
 
 
 class ExplainResponse(BaseModel):
@@ -13,10 +18,11 @@ class ExplainResponse(BaseModel):
     what_to_do_next: str
     action_items: list[str]
     paste_id: Optional[str] = None
+    saved: bool = False
 
 
 class ReplyRequest(BaseModel):
-    text: str
+    text: str = Field(max_length=MAX_INPUT_CHARS)
     tone: str
     paste_id: Optional[str] = None
 
@@ -24,10 +30,11 @@ class ReplyRequest(BaseModel):
 class ReplyResponse(BaseModel):
     reply: str
     tone: str
+    saved: bool = False
 
 
 class ProgressEntryCreate(BaseModel):
-    entry_text: str
+    entry_text: str = Field(max_length=MAX_INPUT_CHARS)
     entry_type: str
     week_start: str
 
@@ -63,11 +70,13 @@ class WeeklySummary(BaseModel):
 
 class WeeklySummaryResponse(BaseModel):
     summary: WeeklySummary
+    saved: bool = False
 
 
 class ResumeBulletsRequest(BaseModel):
-    description: str
+    description: str = Field(max_length=MAX_INPUT_CHARS)
 
 
 class ResumeBulletsResponse(BaseModel):
     bullets: list[str]
+    saved: bool = False

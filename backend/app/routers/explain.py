@@ -40,4 +40,5 @@ def explain(payload: ExplainRequest, user_id: str = Depends(get_current_user_id)
         what_to_do_next=result.get("what_to_do_next", ""),
         action_items=result.get("action_items", []),
         paste_id=paste_id,
+        saved=paste_id is not None,
     )

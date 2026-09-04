@@ -69,6 +69,28 @@ def save_reply(user_id: str, original_text: str, tone: str, reply_text: str, pas
         return None
 
 
+def save_resume_bullets(user_id: str, description: str, bullets: list[str]) -> str | None:
+    client = get_supabase()
+    if client is None:
+        return None
+    try:
+        result = (
+            client.table("resume_bullets")
+            .insert(
+                {
+                    "user_id": user_id,
+                    "description": description,
+                    "bullets": bullets,
+                }
+            )
+            .execute()
+        )
+        return result.data[0]["id"] if result.data else None
+    except Exception:
+        logger.exception("Failed to save resume bullets to Supabase")
+        return None
+
+
 def save_progress_entry(user_id: str, entry_text: str, entry_type: str, week_start: str) -> dict | None:
     client = get_supabase()
     if client is None:

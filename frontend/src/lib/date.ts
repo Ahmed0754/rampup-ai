@@ -1,3 +1,12 @@
+export function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}
+
 export function getCurrentWeekStart(): string {
   const now = new Date()
   const day = now.getDay()

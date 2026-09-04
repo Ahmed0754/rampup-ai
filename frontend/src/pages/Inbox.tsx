@@ -22,6 +22,9 @@ export default function Inbox() {
     try {
       const data = await explainText(text)
       setResult(data)
+      if (!data.saved) {
+        toast("Couldn't save this to your history", { icon: "⚠️" })
+      }
     } catch (err) {
       const message =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Something went wrong"
