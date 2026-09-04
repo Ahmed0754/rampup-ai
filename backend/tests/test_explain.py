@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from app.services.claude import ClaudeServiceError
+from app.services.ai import AIServiceError
 
 EXPLAIN_RESULT = {
     "explanation": "Your build failed because a dependency is missing.",
@@ -17,7 +17,7 @@ def _mock_service(**overrides):
 
 
 def test_explain_endpoint_returns_expected_fields(client, auth_headers):
-    with patch("app.routers.explain.ClaudeService", return_value=_mock_service()):
+    with patch("app.routers.explain.AIService", return_value=_mock_service()):
         response = client.post("/api/explain", json={"text": "Traceback: ModuleNotFoundError"}, headers=auth_headers)
 
     assert response.status_code == 200
@@ -31,7 +31,7 @@ def test_explain_endpoint_returns_expected_fields(client, auth_headers):
 
 def test_explain_saves_paste_to_supabase(client, auth_headers):
     with (
-        patch("app.routers.explain.ClaudeService", return_value=_mock_service()),
+        patch("app.routers.explain.AIService", return_value=_mock_service()),
         patch("app.routers.explain.save_paste", return_value="paste-123") as mock_save,
     ):
         response = client.post("/api/explain", json={"text": "Traceback: ModuleNotFoundError"}, headers=auth_headers)
@@ -51,16 +51,16 @@ def test_explain_empty_text_returns_422(client, auth_headers):
 
 
 def test_explain_missing_api_key_returns_500(client, auth_headers, monkeypatch):
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     response = client.post("/api/explain", json={"text": "some real text"}, headers=auth_headers)
     assert response.status_code == 500
     assert response.json()["detail"] == "API key not configured"
 
 
-def test_explain_claude_error_returns_502(client, auth_headers):
+def test_explain_ai_error_returns_502(client, auth_headers):
     mock = MagicMock()
-    mock.explain.side_effect = ClaudeServiceError("AI service unavailable")
-    with patch("app.routers.explain.ClaudeService", return_value=mock):
+    mock.explain.side_effect = AIServiceError("AI service unavailable")
+    with patch("app.routers.explain.AIService", return_value=mock):
         response = client.post("/api/explain", json={"text": "some real text"}, headers=auth_headers)
 
     assert response.status_code == 502
@@ -68,7 +68,7 @@ def test_explain_claude_error_returns_502(client, auth_headers):
 
 
 def test_explain_classifies_email_input_type(client, auth_headers):
-    with patch("app.routers.explain.ClaudeService", return_value=_mock_service()):
+    with patch("app.routers.explain.AIService", return_value=_mock_service()):
         response = client.post(
             "/api/explain",
             json={"text": "Dear team,\n\nPlease review the attached doc."},

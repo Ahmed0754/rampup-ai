@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.deps import get_current_user_id
 from app.models import ReplyRequest, ReplyResponse
-from app.services.claude import ClaudeService, ClaudeServiceError
+from app.services.ai import AIService, AIServiceError
 from app.services.supabase import save_reply
 
 router = APIRouter()
@@ -20,9 +20,9 @@ def generate_reply(payload: ReplyRequest, user_id: str = Depends(get_current_use
         raise HTTPException(status_code=422, detail=f"Invalid tone. Must be one of: {', '.join(sorted(VALID_TONES))}")
 
     try:
-        service = ClaudeService()
+        service = AIService()
         reply_text = service.generate_reply(text, payload.tone)
-    except ClaudeServiceError as exc:
+    except AIServiceError as exc:
         message = str(exc)
         status_code = 500 if message == "API key not configured" else 502
         raise HTTPException(status_code=status_code, detail=message) from exc

@@ -22,5 +22,5 @@ def auth_headers():
 
 
 @pytest.fixture(autouse=True)
-def anthropic_key(monkeypatch):
-    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+def gemini_key(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")

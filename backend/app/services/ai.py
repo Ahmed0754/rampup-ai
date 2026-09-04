@@ -1,10 +1,12 @@
 import json
 import os
 
-from anthropic import Anthropic
+from google import genai
+from google.genai import types
+from google.genai.errors import APIError
 
-MODEL = "claude-sonnet-4-6"
-MAX_TOKENS = 1500
+MODEL = "gemini-2.5-flash"
+MAX_TOKENS = 2048
 
 TONE_INSTRUCTIONS = {
     "casual": "friendly, uses contractions, sounds like a peer",
@@ -14,27 +16,35 @@ TONE_INSTRUCTIONS = {
 }
 
 
-class ClaudeServiceError(Exception):
+class AIServiceError(Exception):
     pass
 
 
-class ClaudeService:
+class AIService:
     def __init__(self):
-        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
-            raise ClaudeServiceError("API key not configured")
-        self.client = Anthropic(api_key=api_key)
+            raise AIServiceError("API key not configured")
+        self.client = genai.Client(api_key=api_key)
 
-    def _complete(self, prompt: str) -> str:
+    def _complete(self, prompt: str, json_output: bool = False) -> str:
+        config = types.GenerateContentConfig(
+            max_output_tokens=MAX_TOKENS,
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            response_mime_type="application/json" if json_output else "text/plain",
+        )
         try:
-            response = self.client.messages.create(
+            response = self.client.models.generate_content(
                 model=MODEL,
-                max_tokens=MAX_TOKENS,
-                messages=[{"role": "user", "content": prompt}],
+                contents=prompt,
+                config=config,
             )
-            return response.content[0].text
-        except Exception as exc:
-            raise ClaudeServiceError("AI service unavailable") from exc
+            text = response.text
+            if not text:
+                raise AIServiceError("AI service unavailable")
+            return text
+        except APIError as exc:
+            raise AIServiceError("AI service unavailable") from exc
 
     def explain(self, text: str, input_type: str) -> dict:
         prompt = f"""You are a senior engineer helping a confused intern understand something at work.
@@ -49,7 +59,7 @@ Respond in JSON with these exact keys:
 - "action_items": array of 2-4 specific actionable tasks as strings
 
 Be direct, friendly, and assume the intern is smart but unfamiliar with the codebase."""
-        raw = self._complete(prompt)
+        raw = self._complete(prompt, json_output=True)
         return _parse_json(raw)
 
     def generate_reply(self, text: str, tone: str) -> str:
@@ -72,7 +82,7 @@ Respond in JSON with:
 - "blockers": blockers or "None this week"
 - "resume_bullets": array of 3-5 strong resume bullet points with action verbs and metrics
 - "talking_points": 3-4 bullet points for a midpoint/final internship review"""
-        raw = self._complete(prompt)
+        raw = self._complete(prompt, json_output=True)
         return _parse_json(raw)
 
     def generate_resume_bullets(self, description: str) -> list[str]:
@@ -82,7 +92,7 @@ Notes:
 {description}
 
 Respond in JSON with a single key "bullets": an array of 3-5 strong resume bullet points using action verbs and metrics where possible."""
-        raw = self._complete(prompt)
+        raw = self._complete(prompt, json_output=True)
         parsed = _parse_json(raw)
         return parsed.get("bullets", [])
 
@@ -96,4 +106,4 @@ def _parse_json(raw: str) -> dict:
     try:
         return json.loads(text)
     except json.JSONDecodeError as exc:
-        raise ClaudeServiceError("AI service unavailable") from exc
+        raise AIServiceError("AI service unavailable") from exc

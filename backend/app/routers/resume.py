@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.models import ResumeBulletsRequest, ResumeBulletsResponse
-from app.services.claude import ClaudeService, ClaudeServiceError
+from app.services.ai import AIService, AIServiceError
 
 router = APIRouter()
 
@@ -13,9 +13,9 @@ def generate_resume_bullets(payload: ResumeBulletsRequest):
         raise HTTPException(status_code=422, detail="Please paste some text first")
 
     try:
-        service = ClaudeService()
+        service = AIService()
         bullets = service.generate_resume_bullets(description)
-    except ClaudeServiceError as exc:
+    except AIServiceError as exc:
         message = str(exc)
         status_code = 500 if message == "API key not configured" else 502
         raise HTTPException(status_code=status_code, detail=message) from exc

@@ -10,7 +10,7 @@ points.
 - **Frontend:** React + TypeScript + Tailwind CSS (Vite)
 - **Backend:** FastAPI (Python)
 - **Database / Auth:** Supabase (Postgres + email/password auth)
-- **AI:** Anthropic Claude (`claude-sonnet-4-6`)
+- **AI:** Google Gemini API (`gemini-2.5-flash`) — free tier, no credit card required
 
 ## Project structure
 
@@ -44,11 +44,14 @@ scoped to `auth.uid()`.
 
 ### 2. Backend
 
+Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+(sign in with a Google account — no credit card, generous free tier).
+
 ```bash
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # fill in ANTHROPIC_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY
+cp .env.example .env   # fill in GEMINI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY
 uvicorn app.main:app --reload
 ```
 

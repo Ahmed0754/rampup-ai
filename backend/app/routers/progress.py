@@ -9,7 +9,7 @@ from app.models import (
     WeeklySummaryRequest,
     WeeklySummaryResponse,
 )
-from app.services.claude import ClaudeService, ClaudeServiceError
+from app.services.ai import AIService, AIServiceError
 from app.services.supabase import (
     get_progress_entries,
     save_progress_entry,
@@ -53,9 +53,9 @@ def generate_weekly_summary(payload: WeeklySummaryRequest, user_id: str = Depend
         raise HTTPException(status_code=422, detail="No progress entries found for this week")
 
     try:
-        service = ClaudeService()
+        service = AIService()
         result = service.generate_weekly_summary(entries)
-    except ClaudeServiceError as exc:
+    except AIServiceError as exc:
         message = str(exc)
         status_code = 500 if message == "API key not configured" else 502
         raise HTTPException(status_code=status_code, detail=message) from exc
