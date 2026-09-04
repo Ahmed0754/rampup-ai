@@ -1,12 +1,15 @@
 import json
 import os
+import time
 
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
 
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-flash-lite-latest"
 MAX_TOKENS = 2048
+RETRY_STATUSES = {429, 503}
+MAX_RETRIES = 3
 
 TONE_INSTRUCTIONS = {
     "casual": "friendly, uses contractions, sounds like a peer",
@@ -30,21 +33,25 @@ class AIService:
     def _complete(self, prompt: str, json_output: bool = False) -> str:
         config = types.GenerateContentConfig(
             max_output_tokens=MAX_TOKENS,
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
             response_mime_type="application/json" if json_output else "text/plain",
         )
-        try:
-            response = self.client.models.generate_content(
-                model=MODEL,
-                contents=prompt,
-                config=config,
-            )
-            text = response.text
-            if not text:
-                raise AIServiceError("AI service unavailable")
-            return text
-        except APIError as exc:
-            raise AIServiceError("AI service unavailable") from exc
+        for attempt in range(MAX_RETRIES):
+            try:
+                response = self.client.models.generate_content(
+                    model=MODEL,
+                    contents=prompt,
+                    config=config,
+                )
+                text = response.text
+                if not text:
+                    raise AIServiceError("AI service unavailable")
+                return text
+            except APIError as exc:
+                retryable = exc.code in RETRY_STATUSES and attempt < MAX_RETRIES - 1
+                if not retryable:
+                    raise AIServiceError("AI service unavailable") from exc
+                time.sleep(2**attempt)
+        raise AIServiceError("AI service unavailable")
 
     def explain(self, text: str, input_type: str) -> dict:
         prompt = f"""You are a senior engineer helping a confused intern understand something at work.

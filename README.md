@@ -10,7 +10,7 @@ points.
 - **Frontend:** React + TypeScript + Tailwind CSS (Vite)
 - **Backend:** FastAPI (Python)
 - **Database / Auth:** Supabase (Postgres + email/password auth)
-- **AI:** Google Gemini API (`gemini-2.5-flash`) — free tier, no credit card required
+- **AI:** Google Gemini API (`gemini-flash-lite-latest`) — free tier, no credit card required
 
 ## Project structure
 
