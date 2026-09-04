@@ -66,8 +66,13 @@ Respond in JSON with these exact keys:
 - "action_items": array of 2-4 specific actionable tasks as strings
 
 Be direct, friendly, and assume the intern is smart but unfamiliar with the codebase."""
-        raw = self._complete(prompt, json_output=True)
-        return _parse_json(raw)
+        data = _parse_json(self._complete(prompt, json_output=True))
+        return {
+            "explanation": _as_text(data.get("explanation")),
+            "what_they_mean": _as_text(data.get("what_they_mean")),
+            "what_to_do_next": _as_text(data.get("what_to_do_next")),
+            "action_items": _as_list(data.get("action_items")),
+        }
 
     def generate_reply(self, text: str, tone: str) -> str:
         tone_desc = TONE_INSTRUCTIONS.get(tone, tone)
@@ -89,8 +94,14 @@ Respond in JSON with:
 - "blockers": blockers or "None this week"
 - "resume_bullets": array of 3-5 strong resume bullet points with action verbs and metrics
 - "talking_points": 3-4 bullet points for a midpoint/final internship review"""
-        raw = self._complete(prompt, json_output=True)
-        return _parse_json(raw)
+        data = _parse_json(self._complete(prompt, json_output=True))
+        return {
+            "what_i_worked_on": _as_text(data.get("what_i_worked_on")),
+            "what_i_learned": _as_text(data.get("what_i_learned")),
+            "blockers": _as_text(data.get("blockers")) or "None this week",
+            "resume_bullets": _as_list(data.get("resume_bullets")),
+            "talking_points": _as_text(data.get("talking_points")),
+        }
 
     def generate_resume_bullets(self, description: str) -> list[str]:
         prompt = f"""You are helping an intern turn rough notes about their work into strong resume bullet points.
@@ -99,9 +110,26 @@ Notes:
 {description}
 
 Respond in JSON with a single key "bullets": an array of 3-5 strong resume bullet points using action verbs and metrics where possible."""
-        raw = self._complete(prompt, json_output=True)
-        parsed = _parse_json(raw)
-        return parsed.get("bullets", [])
+        parsed = _parse_json(self._complete(prompt, json_output=True))
+        return _as_list(parsed.get("bullets"))
+
+
+def _as_text(value: object) -> str:
+    """Model JSON fields that should be prose sometimes come back as a list of
+    strings (or a number). Normalise everything to a single string."""
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        return "\n".join(str(item) for item in value)
+    return str(value)
+
+
+def _as_list(value: object) -> list[str]:
+    if isinstance(value, list):
+        return [str(item) for item in value]
+    if value in (None, ""):
+        return []
+    return [str(value)]
 
 
 def _parse_json(raw: str) -> dict:
@@ -111,6 +139,9 @@ def _parse_json(raw: str) -> dict:
         if text.startswith("json"):
             text = text[4:]
     try:
-        return json.loads(text)
+        parsed = json.loads(text)
     except json.JSONDecodeError as exc:
         raise AIServiceError("AI service unavailable") from exc
+    if not isinstance(parsed, dict):
+        raise AIServiceError("AI service unavailable")
+    return parsed
