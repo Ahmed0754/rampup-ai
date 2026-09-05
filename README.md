@@ -36,6 +36,8 @@ rampup-ai/
 - **Weekly Summary** — turn a week of progress entries into a status update, talking points for
   your check-in, and resume bullets.
 - **Resume Bullets** — turn rough notes about your work into strong, metric-driven resume bullets.
+- **Weekly nudge** — an automated email to anyone who hasn't logged progress yet that week, so
+  Weekly Summary always has something to work with.
 - **History** — browse everything you've explained, replied to, summarized, or turned into resume
   bullets, scoped to your account.
 
@@ -107,6 +109,25 @@ The app is served at `http://localhost:5173`.
 Streamed endpoints return newline-delimited JSON: `{"type":"chunk","text":"..."}` pieces as the
 model generates, then one `{"type":"done", ...}` with the final saved result (or `{"type":"error"}`
 if generation fails partway through).
+
+## Weekly nudge
+
+`backend/scripts/weekly_nudge.py` emails anyone who hasn't logged a progress entry for the current
+week yet. It's independent of the running API — it runs as a scheduled GitHub Actions workflow
+(`.github/workflows/weekly-nudge.yml`, Mondays by default) using a free
+[Resend](https://resend.com) account for sending.
+
+To enable it:
+
+1. Sign up at [resend.com](https://resend.com) (free tier, no card) and grab an API key from
+   **API Keys**.
+2. Add repo secrets under **Settings -> Secrets and variables -> Actions**: `SUPABASE_URL`,
+   `SUPABASE_SERVICE_KEY`, `RESEND_API_KEY`, and optionally `FRONTEND_URL` (linked from the email).
+3. Test it on demand from the **Actions** tab -> "Weekly progress nudge" -> **Run workflow**,
+   before waiting for Monday.
+
+Run it locally with `cd backend && python -m scripts.weekly_nudge` (needs the same vars in
+`backend/.env`).
 
 ## Deployment
 
