@@ -64,6 +64,15 @@ uvicorn app.main:app --reload
 
 The API is served at `http://localhost:8000`, with a health check at `GET /health`.
 
+Two more `.env` vars are optional locally but matter once you deploy:
+
+- `CORS_ORIGINS` - comma-separated frontend origins allowed to call the API. Defaults to the
+  local Vite dev ports; set it to your deployed frontend's URL (e.g. `https://your-app.vercel.app`)
+  in production.
+- `SUPABASE_JWT_SECRET` - from **Settings -> API -> JWT Settings -> JWT Secret**. Lets the backend
+  verify session tokens locally instead of calling Supabase Auth on every request. Falls back to
+  that network check if unset.
+
 Run the tests:
 
 ```bash

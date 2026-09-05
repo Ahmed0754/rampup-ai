@@ -69,3 +69,21 @@ def test_classify_empty_string_is_other():
 def test_classify_error_takes_precedence_over_slack():
     text = "Traceback (most recent call last):\n@user this broke in prod"
     assert classify_input(text) == "error"
+
+
+def test_classify_priority_is_not_misread_as_pr():
+    # "PR" used to match as a bare substring, so ALL-CAPS "PRIORITY" false-
+    # positived as a pull request.
+    assert classify_input("This is SUPER PRIORITY, please fix ASAP") == "other"
+
+
+def test_classify_sprint_is_not_misread_as_pr():
+    assert classify_input("Let's wrap up this SPRINT by Friday, we're on track") == "other"
+
+
+def test_classify_ticket_is_case_insensitive():
+    assert classify_input("Ticket ENG-500 needs a fix before release") == "jira"
+
+
+def test_classify_meetings_plural():
+    assert classify_input("Notes from yesterday's meetings") == "meeting_note"
