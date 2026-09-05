@@ -55,14 +55,71 @@ export interface WeeklySummary {
   talking_points: string
 }
 
-export async function explainText(text: string): Promise<ExplainResponse> {
-  const { data } = await api.post<ExplainResponse>("/api/explain", { text })
-  return data
+// Streaming endpoints (explain/reply/resume-bullets) return newline-delimited
+// JSON: {"type":"chunk","text":"..."} pieces as the model generates them,
+// then one {"type":"done", ...fields} with the final parsed/saved result, or
+// {"type":"error","message":"..."} if generation failed partway through.
+// axios doesn't expose a readable stream in the browser, so these use fetch
+// directly and attach the same Supabase bearer token the axios interceptor
+// adds elsewhere.
+async function streamNdjson<T>(path: string, body: unknown, onChunk: (text: string) => void): Promise<T> {
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+
+  const res = await fetch(`${import.meta.env.VITE_API_URL}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!res.ok || !res.body) {
+    let message = "Something went wrong"
+    try {
+      message = (await res.json()).detail ?? message
+    } catch {
+      // response wasn't JSON - keep the generic message
+    }
+    throw new Error(message)
+  }
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ""
+  let done: T | null = null
+
+  while (true) {
+    const { value, done: streamDone } = await reader.read()
+    if (streamDone) break
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split("\n")
+    buffer = lines.pop() ?? ""
+    for (const line of lines) {
+      if (!line.trim()) continue
+      const event = JSON.parse(line) as { type: string; [key: string]: unknown }
+      if (event.type === "chunk") onChunk(event.text as string)
+      else if (event.type === "error") throw new Error(event.message as string)
+      else if (event.type === "done") done = event as T
+    }
+  }
+
+  if (!done) throw new Error("Something went wrong")
+  return done
 }
 
-export async function generateReply(text: string, tone: Tone, pasteId?: string): Promise<ReplyResponse> {
-  const { data } = await api.post<ReplyResponse>("/api/reply", { text, tone, paste_id: pasteId })
-  return data
+export async function explainTextStream(text: string, onChunk: (text: string) => void): Promise<ExplainResponse> {
+  return streamNdjson<ExplainResponse>("/api/explain", { text }, onChunk)
+}
+
+export async function generateReplyStream(
+  text: string,
+  tone: Tone,
+  pasteId: string | undefined,
+  onChunk: (text: string) => void,
+): Promise<ReplyResponse> {
+  return streamNdjson<ReplyResponse>("/api/reply", { text, tone, paste_id: pasteId }, onChunk)
 }
 
 export async function createProgressEntry(
@@ -92,7 +149,14 @@ export async function generateWeeklySummary(weekStart: string): Promise<WeeklySu
   return data.summary
 }
 
-export async function generateResumeBullets(description: string): Promise<string[]> {
-  const { data } = await api.post<{ bullets: string[] }>("/api/resume-bullets", { description })
-  return data.bullets
+export interface ResumeBulletsResponse {
+  bullets: string[]
+  saved: boolean
+}
+
+export async function generateResumeBulletsStream(
+  description: string,
+  onChunk: (text: string) => void,
+): Promise<ResumeBulletsResponse> {
+  return streamNdjson<ResumeBulletsResponse>("/api/resume-bullets", { description }, onChunk)
 }

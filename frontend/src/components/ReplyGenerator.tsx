@@ -1,6 +1,6 @@
 import { useState } from "react"
 import toast from "react-hot-toast"
-import { generateReply } from "../lib/api"
+import { generateReplyStream } from "../lib/api"
 import type { Tone } from "../lib/api"
 
 const TONES: { value: Tone; label: string }[] = [
@@ -26,16 +26,15 @@ export default function ReplyGenerator({ originalText, pasteId }: ReplyGenerator
       return
     }
     setLoading(true)
+    setReply("")
     try {
-      const data = await generateReply(originalText, tone, pasteId)
+      const data = await generateReplyStream(originalText, tone, pasteId, (chunk) => setReply((r) => r + chunk))
       setReply(data.reply)
       if (!data.saved) {
         toast("Couldn't save this to your history", { icon: "⚠️" })
       }
     } catch (err) {
-      const message =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Something went wrong"
-      toast.error(message)
+      toast.error(err instanceof Error ? err.message : "Something went wrong")
     } finally {
       setLoading(false)
     }

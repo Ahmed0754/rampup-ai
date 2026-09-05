@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useLocation } from "react-router-dom"
 import toast from "react-hot-toast"
 import ResumeBullet from "../components/ResumeBullet.tsx"
-import { generateResumeBullets } from "../lib/api"
+import { generateResumeBulletsStream } from "../lib/api"
 
 interface ResumeLocationState {
   notes?: string
@@ -14,6 +14,7 @@ export default function Resume() {
 
   const [description, setDescription] = useState(state.notes ?? "")
   const [loading, setLoading] = useState(false)
+  const [streamText, setStreamText] = useState("")
   const [bullets, setBullets] = useState<string[]>([])
 
   async function handleGenerate() {
@@ -22,13 +23,16 @@ export default function Resume() {
       return
     }
     setLoading(true)
+    setBullets([])
+    setStreamText("")
     try {
-      const data = await generateResumeBullets(description)
-      setBullets(data)
+      const data = await generateResumeBulletsStream(description, (chunk) => setStreamText((s) => s + chunk))
+      setBullets(data.bullets)
+      if (!data.saved) {
+        toast("Couldn't save this to your history", { icon: "⚠️" })
+      }
     } catch (err) {
-      const message =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Something went wrong"
-      toast.error(message)
+      toast.error(err instanceof Error ? err.message : "Something went wrong")
     } finally {
       setLoading(false)
     }
@@ -59,6 +63,12 @@ export default function Resume() {
       >
         {loading ? "Generating..." : "Generate Bullets"}
       </button>
+
+      {loading && bullets.length === 0 && streamText && (
+        <pre className="mt-6 whitespace-pre-wrap rounded-xl border border-border bg-panel p-4 font-sans text-sm text-neutral-400">
+          {streamText}
+        </pre>
+      )}
 
       {bullets.length > 0 && (
         <div className="mt-6 space-y-4">
