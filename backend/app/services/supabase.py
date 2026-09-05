@@ -69,6 +69,60 @@ def save_reply(user_id: str, original_text: str, tone: str, reply_text: str, pas
         return None
 
 
+def get_paste(paste_id: str, user_id: str) -> dict | None:
+    client = get_supabase()
+    if client is None:
+        return None
+    try:
+        result = (
+            client.table("pastes")
+            .select("id, raw_text, explanation, input_type")
+            .eq("id", paste_id)
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+        return result.data[0] if result.data else None
+    except Exception:
+        logger.exception("Failed to fetch paste from Supabase")
+        return None
+
+
+def get_explain_chat_messages(paste_id: str, user_id: str) -> list[dict]:
+    client = get_supabase()
+    if client is None:
+        return []
+    try:
+        result = (
+            client.table("explain_chat_messages")
+            .select("role, content")
+            .eq("paste_id", paste_id)
+            .eq("user_id", user_id)
+            .order("created_at", desc=False)
+            .execute()
+        )
+        return result.data or []
+    except Exception:
+        logger.exception("Failed to fetch explain chat messages from Supabase")
+        return []
+
+
+def save_explain_chat_message(user_id: str, paste_id: str, role: str, content: str) -> str | None:
+    client = get_supabase()
+    if client is None:
+        return None
+    try:
+        result = (
+            client.table("explain_chat_messages")
+            .insert({"user_id": user_id, "paste_id": paste_id, "role": role, "content": content})
+            .execute()
+        )
+        return result.data[0]["id"] if result.data else None
+    except Exception:
+        logger.exception("Failed to save explain chat message to Supabase")
+        return None
+
+
 def save_resume_bullets(user_id: str, description: str, bullets: list[str]) -> str | None:
     client = get_supabase()
     if client is None:

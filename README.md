@@ -28,7 +28,8 @@ rampup-ai/
 ## Features
 
 - **Explain This** — paste anything and get a plain-English explanation, what the sender actually
-  wants, the single most important next step, and a checklist of action items.
+  wants, the single most important next step, and a checklist of action items. Streams in as it
+  generates, and you can ask follow-up questions right there ("wait, what does that mean?").
 - **Reply Generator** — turn any message into a draft reply in one of four tones: casual,
   professional, manager-safe, or confused-but-trying.
 - **Progress Tracker** — log wins, things learned, blockers, and completed tasks per week.
@@ -43,8 +44,8 @@ rampup-ai/
 ### 1. Supabase
 
 Create a Supabase project and run `supabase/schema.sql` in the SQL editor. This creates the
-`pastes`, `replies`, `progress_entries`, `weekly_summaries`, and `resume_bullets` tables with
-row-level security scoped to `auth.uid()`.
+`pastes`, `replies`, `progress_entries`, `weekly_summaries`, `resume_bullets`, and
+`explain_chat_messages` tables with row-level security scoped to `auth.uid()`.
 
 If you set the project up earlier, apply new tables by running the files in
 `supabase/migrations/` in order.
@@ -95,12 +96,17 @@ The app is served at `http://localhost:5173`.
 | Method | Path                    | Description                                   |
 | ------ | ----------------------- | ---------------------------------------------- |
 | GET    | `/health`               | Health check                                   |
-| POST   | `/api/explain`          | Classify + explain pasted text                 |
-| POST   | `/api/reply`            | Generate a toned reply draft                   |
+| POST   | `/api/explain`          | Classify + explain pasted text (streamed)      |
+| POST   | `/api/explain/chat`     | Ask a follow-up question about an explanation (streamed) |
+| POST   | `/api/reply`            | Generate a toned reply draft (streamed)        |
 | POST   | `/api/progress`         | Log a progress entry                           |
 | GET    | `/api/progress`         | List progress entries for a given week         |
 | POST   | `/api/progress/summary` | Generate a weekly summary from progress entries|
-| POST   | `/api/resume-bullets`   | Generate resume bullets from rough notes       |
+| POST   | `/api/resume-bullets`   | Generate resume bullets from rough notes (streamed) |
+
+Streamed endpoints return newline-delimited JSON: `{"type":"chunk","text":"..."}` pieces as the
+model generates, then one `{"type":"done", ...}` with the final saved result (or `{"type":"error"}`
+if generation fails partway through).
 
 ## Deployment
 

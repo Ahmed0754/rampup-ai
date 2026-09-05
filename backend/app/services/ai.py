@@ -110,6 +110,26 @@ Write the reply in this tone: {tone} ({tone_desc}).
 Respond with only the reply text, no preamble or explanation."""
         yield from self._stream(prompt)
 
+    def chat_stream(self, original_text: str, explanation: str, history: list[dict], message: str) -> Iterator[str]:
+        convo = "\n".join(
+            f"{'Intern' if turn.get('role') == 'user' else 'You'}: {turn.get('content', '')}" for turn in history
+        )
+        convo_block = f"\nConversation so far:\n{convo}\n" if convo else ""
+        prompt = f"""You are a senior engineer. Earlier, an intern pasted something at work and you explained it
+to them. They now have a follow-up question.
+
+What the intern originally pasted:
+{original_text}
+
+Your explanation:
+{explanation}
+{convo_block}
+The intern now asks: {message}
+
+Reply directly to their question in 1-4 sentences, plain English, no jargon, no preamble like
+"Great question". If it isn't related to the original message, still answer it, briefly."""
+        yield from self._stream(prompt)
+
     def generate_resume_bullets_stream(self, description: str) -> Iterator[str]:
         prompt = f"""You are helping an intern turn rough notes about their work into strong resume bullet points.
 

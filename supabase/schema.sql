@@ -47,14 +47,25 @@ CREATE TABLE resume_bullets (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE explain_chat_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  paste_id UUID REFERENCES pastes(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 ALTER TABLE pastes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE replies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE progress_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE weekly_summaries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE resume_bullets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE explain_chat_messages ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users see own pastes" ON pastes FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users see own replies" ON replies FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users see own progress" ON progress_entries FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users see own summaries" ON weekly_summaries FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users see own resume bullets" ON resume_bullets FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users see own explain chat" ON explain_chat_messages FOR ALL USING (auth.uid() = user_id);

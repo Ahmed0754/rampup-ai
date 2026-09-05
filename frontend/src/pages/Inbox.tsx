@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import toast from "react-hot-toast"
 import PasteInbox from "../components/PasteInbox.tsx"
 import ExplainOutput from "../components/ExplainOutput.tsx"
+import ExplainChat from "../components/ExplainChat.tsx"
 import { explainTextStream } from "../lib/api"
 import type { ExplainResponse } from "../lib/api"
 
@@ -47,7 +48,20 @@ export default function Inbox() {
           {streamText}
         </pre>
       )}
-      {result && <ExplainOutput result={result} onGenerateReply={handleGenerateReply} />}
+      {result && (
+        <>
+          <ExplainOutput result={result} onGenerateReply={handleGenerateReply} />
+          <div className="mt-6">
+            {result.paste_id ? (
+              <ExplainChat pasteId={result.paste_id} />
+            ) : (
+              <p className="text-center text-xs text-neutral-600">
+                Follow-up questions aren't available since this couldn't be saved to your history.
+              </p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }

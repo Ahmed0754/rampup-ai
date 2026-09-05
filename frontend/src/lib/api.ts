@@ -122,6 +122,19 @@ export async function generateReplyStream(
   return streamNdjson<ReplyResponse>("/api/reply", { text, tone, paste_id: pasteId }, onChunk)
 }
 
+export interface ExplainChatResponse {
+  reply: string
+  saved: boolean
+}
+
+export async function explainChatStream(
+  pasteId: string,
+  message: string,
+  onChunk: (text: string) => void,
+): Promise<ExplainChatResponse> {
+  return streamNdjson<ExplainChatResponse>("/api/explain/chat", { paste_id: pasteId, message }, onChunk)
+}
+
 export async function createProgressEntry(
   entryText: string,
   entryType: EntryType,

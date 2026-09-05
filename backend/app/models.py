@@ -21,6 +21,11 @@ class ExplainResponse(BaseModel):
     saved: bool = False
 
 
+class ExplainChatRequest(BaseModel):
+    paste_id: str
+    message: str = Field(max_length=MAX_INPUT_CHARS)
+
+
 class ReplyRequest(BaseModel):
     text: str = Field(max_length=MAX_INPUT_CHARS)
     tone: str

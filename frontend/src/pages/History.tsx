@@ -159,6 +159,7 @@ function renderDetail(row: Row, tab: TabKey): ReactNode {
           <Field label="Pasted">{String(row.raw_text ?? "")}</Field>
           <Field label="Explanation">{String(row.explanation ?? "")}</Field>
           <BulletField label="Action items" items={toStringArray(row.action_items)} />
+          <ExplainChatThread pasteId={String(row.id)} />
         </>
       )
     case "replies":
@@ -214,4 +215,47 @@ function BulletField({ label, items }: { label: string; items: string[] }) {
 
 function toStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.map(String) : []
+}
+
+interface ChatMessageRow {
+  role: string
+  content: string
+}
+
+function ExplainChatThread({ pasteId }: { pasteId: string }) {
+  const { session } = useAuth()
+  const [messages, setMessages] = useState<ChatMessageRow[]>([])
+
+  useEffect(() => {
+    if (!session) return
+    let active = true
+    supabase
+      .from("explain_chat_messages")
+      .select("role, content")
+      .eq("paste_id", pasteId)
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (active) setMessages((data as ChatMessageRow[]) ?? [])
+      })
+    return () => {
+      active = false
+    }
+  }, [pasteId, session])
+
+  if (messages.length === 0) return null
+
+  return (
+    <div>
+      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-neutral-500">Follow-up questions</p>
+      <div className="space-y-2">
+        {messages.map((m, i) => (
+          <p key={i} className={m.role === "user" ? "text-neutral-200" : "pl-3 text-neutral-400"}>
+            <span className="font-medium">{m.role === "user" ? "You: " : "Answer: "}</span>
+            {m.content}
+          </p>
+        ))}
+      </div>
+    </div>
+  )
 }
