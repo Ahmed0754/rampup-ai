@@ -1,5 +1,7 @@
 # RampUp AI
 
+[![CI](https://github.com/Ahmed0754/rampup-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Ahmed0754/rampup-ai/actions/workflows/ci.yml)
+
 An AI-powered productivity assistant for interns and junior developers. Paste a Slack message,
 terminal error, email, or Jira ticket and get a plain-English explanation, action items, a
 ready-to-send reply draft, and — over time — a weekly progress summary with resume-ready bullet
