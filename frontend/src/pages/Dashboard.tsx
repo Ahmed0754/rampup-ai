@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../lib/auth.tsx"
 import { supabase } from "../lib/supabase"
-import { getCurrentWeekStart } from "../lib/date"
+import { computeStreak, getCurrentWeekStart } from "../lib/date"
 
 interface RecentPaste {
   id: string
@@ -16,6 +16,7 @@ interface Stats {
   repliesGenerated: number
   progressEntries: number
   internshipWeek: number
+  streak: number
 }
 
 export default function Dashboard() {
@@ -26,6 +27,7 @@ export default function Dashboard() {
     repliesGenerated: 0,
     progressEntries: 0,
     internshipWeek: 1,
+    streak: 0,
   })
   const [recentPastes, setRecentPastes] = useState<RecentPaste[]>([])
 
@@ -40,7 +42,7 @@ export default function Dashboard() {
   async function loadDashboard(userId: string, createdAt: string) {
     const weekStart = getCurrentWeekStart()
 
-    const [pastesRes, repliesRes, progressRes, recentRes] = await Promise.all([
+    const [pastesRes, repliesRes, progressRes, recentRes, allWeeksRes] = await Promise.all([
       supabase
         .from("pastes")
         .select("id", { count: "exact", head: true })
@@ -58,6 +60,7 @@ export default function Dashboard() {
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(5),
+      supabase.from("progress_entries").select("week_start").eq("user_id", userId),
     ])
 
     const weeksSinceStart = Math.max(
@@ -70,6 +73,7 @@ export default function Dashboard() {
       repliesGenerated: repliesRes.count ?? 0,
       progressEntries: progressRes.count ?? 0,
       internshipWeek: weeksSinceStart,
+      streak: computeStreak((allWeeksRes.data ?? []).map((row) => row.week_start as string)),
     })
     setRecentPastes(recentRes.data ?? [])
   }
@@ -78,11 +82,12 @@ export default function Dashboard() {
     <div className="mx-auto max-w-4xl">
       <h1 className="mb-8 text-2xl font-semibold text-white">Good morning, {name}</h1>
 
-      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-5">
         <StatCard label="Pastes this week" value={stats.pastesThisWeek} />
         <StatCard label="Replies generated" value={stats.repliesGenerated} />
         <StatCard label="Progress entries" value={stats.progressEntries} />
         <StatCard label="Internship week" value={stats.internshipWeek} />
+        <StatCard label="Week streak" value={stats.streak} icon={stats.streak > 0 ? "🔥" : undefined} />
       </div>
 
       <div className="mb-8 grid gap-3 sm:grid-cols-3">
@@ -117,10 +122,13 @@ export default function Dashboard() {
   )
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({ label, value, icon }: { label: string; value: number; icon?: string }) {
   return (
     <div className="rounded-xl border border-border bg-panel p-4">
-      <p className="text-2xl font-semibold text-white">{value}</p>
+      <p className="text-2xl font-semibold text-white">
+        {value}
+        {icon && <span className="ml-1">{icon}</span>}
+      </p>
       <p className="mt-1 text-xs text-neutral-400">{label}</p>
     </div>
   )
