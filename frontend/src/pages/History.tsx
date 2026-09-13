@@ -24,6 +24,28 @@ const TYPE_LABELS: Record<string, string> = {
   other: "Message",
 }
 
+const TONE_OPTIONS = ["casual", "professional", "manager-safe", "confused-but-trying"]
+
+// Which field each tab can be filtered by, and what to search across.
+const FILTER_FIELD: Partial<Record<TabKey, string>> = { explained: "input_type", replies: "tone" }
+const FILTER_OPTIONS: Partial<Record<TabKey, string[]>> = {
+  explained: Object.keys(TYPE_LABELS),
+  replies: TONE_OPTIONS,
+}
+
+function searchableText(row: Row, tab: TabKey): string {
+  switch (tab) {
+    case "explained":
+      return `${row.raw_text ?? ""} ${row.explanation ?? ""}`
+    case "replies":
+      return `${row.original_text ?? ""} ${row.reply_text ?? ""}`
+    case "summaries":
+      return `${row.what_i_worked_on ?? ""} ${row.what_i_learned ?? ""} ${row.talking_points ?? ""}`
+    case "resume":
+      return `${row.description ?? ""} ${toStringArray(row.bullets).join(" ")}`
+  }
+}
+
 interface Row {
   id: string
   created_at: string
@@ -36,14 +58,27 @@ export default function History() {
   const [rows, setRows] = useState<Row[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
+  const [typeFilter, setTypeFilter] = useState("all")
 
   const table = TABS.find((t) => t.key === tab)!.table
+  const filterField = FILTER_FIELD[tab]
+  const filterOptions = FILTER_OPTIONS[tab] ?? []
+
+  const filteredRows = rows.filter((row) => {
+    if (filterField && typeFilter !== "all" && String(row[filterField]) !== typeFilter) return false
+    const query = search.trim().toLowerCase()
+    if (query && !searchableText(row, tab).toLowerCase().includes(query)) return false
+    return true
+  })
 
   useEffect(() => {
     if (!session) return
     let active = true
     setLoading(true)
     setExpanded(null)
+    setSearch("")
+    setTypeFilter("all")
     supabase
       .from(table)
       .select("*")
@@ -82,13 +117,41 @@ export default function History() {
         ))}
       </div>
 
+      {!loading && rows.length > 0 && (
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search this tab..."
+            className="flex-1 rounded-lg border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+          />
+          {filterField && (
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="rounded-lg border border-border bg-panel px-3 py-2 text-sm text-white outline-none focus:border-accent"
+            >
+              <option value="all">{filterField === "input_type" ? "All types" : "All tones"}</option>
+              {filterOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {filterField === "input_type" ? (TYPE_LABELS[opt] ?? opt) : opt}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <p className="text-sm text-neutral-500">Loading...</p>
       ) : rows.length === 0 ? (
         <p className="text-sm text-neutral-600">Nothing here yet.</p>
+      ) : filteredRows.length === 0 ? (
+        <p className="text-sm text-neutral-600">No matches.</p>
       ) : (
         <ul className="space-y-3">
-          {rows.map((row) => (
+          {filteredRows.map((row) => (
             <HistoryCard
               key={row.id}
               row={row}
