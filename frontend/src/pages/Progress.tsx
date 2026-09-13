@@ -40,7 +40,7 @@ export default function Progress() {
         {loading ? "Generating..." : "Generate Weekly Summary"}
       </button>
 
-      {summary && <BragSummary summary={summary} />}
+      {summary && <BragSummary summary={summary} weekStart={weekStart} />}
     </div>
   )
 }

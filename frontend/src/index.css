@@ -13,3 +13,23 @@ body {
     Roboto,
     sans-serif;
 }
+
+/* Used by the "Print / Save as PDF" export: hides everything except the
+   element marked #printable-area when the browser print dialog opens. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-area,
+  #printable-area * {
+    visibility: visible;
+  }
+  #printable-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: #000;
+    background: #fff;
+  }
+}

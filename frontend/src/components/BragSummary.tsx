@@ -1,42 +1,67 @@
 import { useNavigate } from "react-router-dom"
 import type { WeeklySummary } from "../lib/api"
+import { buildWeeklySummaryMarkdown, downloadTextFile } from "../lib/export"
 
 interface BragSummaryProps {
   summary: WeeklySummary
+  weekStart: string
 }
 
-export default function BragSummary({ summary }: BragSummaryProps) {
+export default function BragSummary({ summary, weekStart }: BragSummaryProps) {
   const navigate = useNavigate()
+
+  function handleExportMarkdown() {
+    downloadTextFile(`weekly-summary-${weekStart}.md`, buildWeeklySummaryMarkdown(weekStart, summary))
+  }
 
   return (
     <div className="mt-6 space-y-4">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-panel p-4">
-          <h3 className="mb-2 text-sm font-medium text-neutral-400">What I worked on</h3>
-          <p className="text-sm text-white">{summary.what_i_worked_on}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-panel p-4">
-          <h3 className="mb-2 text-sm font-medium text-neutral-400">What I learned</h3>
-          <p className="text-sm text-white">{summary.what_i_learned}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-panel p-4">
-          <h3 className="mb-2 text-sm font-medium text-neutral-400">Blockers</h3>
-          <p className="text-sm text-white">{summary.blockers}</p>
-        </div>
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={handleExportMarkdown}
+          className="rounded-lg border border-border px-3 py-1.5 text-xs text-neutral-300 hover:text-white"
+        >
+          Export Markdown
+        </button>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="rounded-lg border border-border px-3 py-1.5 text-xs text-neutral-300 hover:text-white"
+        >
+          Print / Save as PDF
+        </button>
       </div>
 
-      <div className="rounded-xl border border-border bg-panel p-4">
-        <h3 className="mb-2 text-sm font-medium text-neutral-400">Talking points for your review</h3>
-        <p className="whitespace-pre-wrap text-sm text-white">{summary.talking_points}</p>
-      </div>
+      <div id="printable-area" className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="rounded-xl border border-border bg-panel p-4">
+            <h3 className="mb-2 text-sm font-medium text-neutral-400">What I worked on</h3>
+            <p className="text-sm text-white">{summary.what_i_worked_on}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-panel p-4">
+            <h3 className="mb-2 text-sm font-medium text-neutral-400">What I learned</h3>
+            <p className="text-sm text-white">{summary.what_i_learned}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-panel p-4">
+            <h3 className="mb-2 text-sm font-medium text-neutral-400">Blockers</h3>
+            <p className="text-sm text-white">{summary.blockers}</p>
+          </div>
+        </div>
 
-      <div className="rounded-xl border border-accent/40 bg-accent/10 p-4">
-        <h3 className="mb-2 text-sm font-medium text-accent">Resume bullets</h3>
-        <ul className="list-disc space-y-1 pl-5 text-sm text-white">
-          {summary.resume_bullets.map((bullet, i) => (
-            <li key={i}>{bullet}</li>
-          ))}
-        </ul>
+        <div className="rounded-xl border border-border bg-panel p-4">
+          <h3 className="mb-2 text-sm font-medium text-neutral-400">Talking points for your review</h3>
+          <p className="whitespace-pre-wrap text-sm text-white">{summary.talking_points}</p>
+        </div>
+
+        <div className="rounded-xl border border-accent/40 bg-accent/10 p-4">
+          <h3 className="mb-2 text-sm font-medium text-accent">Resume bullets</h3>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-white">
+            {summary.resume_bullets.map((bullet, i) => (
+              <li key={i}>{bullet}</li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       <button
