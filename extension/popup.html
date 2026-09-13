@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>RampUp AI</title>
+    <style>
+      body {
+        width: 280px;
+        font-family: system-ui, sans-serif;
+        background: #0f0f0f;
+        color: #fff;
+        margin: 0;
+        padding: 16px;
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 12px;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px;
+        margin-bottom: 8px;
+        border-radius: 6px;
+        border: 1px solid #262626;
+        background: #171717;
+        color: #fff;
+        font-size: 13px;
+      }
+      button {
+        width: 100%;
+        padding: 8px;
+        border-radius: 6px;
+        border: none;
+        background: #7c3aed;
+        color: #fff;
+        cursor: pointer;
+        margin-bottom: 6px;
+        font-size: 13px;
+      }
+      button.secondary {
+        background: transparent;
+        border: 1px solid #262626;
+        color: #ccc;
+      }
+      .error {
+        color: #f87171;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .hint {
+        color: #888;
+        font-size: 11px;
+        margin-top: 10px;
+        line-height: 1.4;
+      }
+      details summary {
+        cursor: pointer;
+        color: #888;
+        font-size: 11px;
+        margin-top: 10px;
+      }
+      details {
+        margin-top: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>RampUp AI</h1>
+
+    <div id="loggedOut">
+      <input id="email" type="email" placeholder="Email" autocomplete="username" />
+      <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+      <div id="loginError" class="error"></div>
+      <button id="loginBtn">Log in</button>
+    </div>
+
+    <div id="loggedIn" style="display: none">
+      <p id="whoami" style="font-size: 12px; color: #ccc"></p>
+      <button id="logoutBtn" class="secondary">Log out</button>
+    </div>
+
+    <p class="hint">Select any text on a page, right-click, and choose "Explain with RampUp AI".</p>
+
+    <details>
+      <summary>Settings</summary>
+      <input id="apiBaseUrl" placeholder="API base URL" />
+      <input id="supabaseUrl" placeholder="Supabase URL" />
+      <input id="supabaseAnonKey" placeholder="Supabase anon key" />
+      <button id="saveSettingsBtn" class="secondary">Save settings</button>
+    </details>
+
+    <script src="lib.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "RampUp AI - Explain This",
+  "version": "1.0.0",
+  "description": "Select any text on a page, right-click, and get a plain-English explanation from RampUp AI - no copy-paste into the app needed.",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["contextMenus", "storage"],
+  "host_permissions": [
+    "http://localhost:8000/*",
+    "https://ldoraumqmaixpfuucniv.supabase.co/*"
+  ]
+}

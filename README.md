@@ -20,6 +20,7 @@ points.
 rampup-ai/
 ├── frontend/     React + TypeScript + Tailwind (Vite)
 ├── backend/      FastAPI app, routers, services, tests
+├── extension/    Browser extension (Chrome/Edge, Manifest V3)
 ├── supabase/     Postgres schema + RLS policies
 ├── vercel.json   Frontend deployment config
 └── backend/Dockerfile
@@ -40,6 +41,8 @@ rampup-ai/
   Weekly Summary always has something to work with.
 - **History** — browse everything you've explained, replied to, summarized, or turned into resume
   bullets, scoped to your account.
+- **Browser extension** — select text anywhere, right-click, and get an explanation without
+  copy-pasting into the app. See [extension/README.md](extension/README.md).
 
 ## Getting started
 
