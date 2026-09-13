@@ -1,16 +1,29 @@
 import json
+import logging
 import os
 import time
 from typing import Iterator
 
+import httpx
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
+
+logger = logging.getLogger("rampup.ai")
 
 MODEL = "gemini-flash-lite-latest"
 MAX_TOKENS = 2048
 RETRY_STATUSES = {429, 503}
 MAX_RETRIES = 3
+
+# Optional fallback provider. If Gemini fails before it has streamed/returned
+# anything (rate limited, briefly down, ...) and GROQ_API_KEY is set, the
+# same prompt is retried against Groq's free tier instead of failing the
+# request outright. Once Gemini has already sent real output there's no
+# switching providers mid-response, same constraint as the same-provider
+# retries above.
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 TONE_INSTRUCTIONS = {
     "casual": "friendly, uses contractions, sounds like a peer",
@@ -52,16 +65,28 @@ class AIService:
                 return text
             except APIError as exc:
                 retryable = exc.code in RETRY_STATUSES and attempt < MAX_RETRIES - 1
-                if not retryable:
-                    raise AIServiceError("AI service unavailable") from exc
-                time.sleep(2**attempt)
-        raise AIServiceError("AI service unavailable")
+                if retryable:
+                    time.sleep(2**attempt)
+                    continue
+                return self._fallback_complete(prompt, json_output, exc)
+        return self._fallback_complete(prompt, json_output, None)
+
+    def _fallback_complete(self, prompt: str, json_output: bool, cause: Exception | None) -> str:
+        if not os.environ.get("GROQ_API_KEY"):
+            raise AIServiceError("AI service unavailable") from cause
+        logger.warning("Gemini failed, falling back to Groq: %s", cause)
+        try:
+            return _groq_complete(prompt, json_output)
+        except Exception as fallback_exc:
+            logger.exception("Groq fallback also failed")
+            raise AIServiceError("AI service unavailable") from fallback_exc
 
     def _stream(self, prompt: str) -> Iterator[str]:
         """Yield text chunks as the model generates them. Retries (with
         backoff) only apply before the first chunk has been sent out - once
         the caller has started forwarding real output there's no way to
-        retry without duplicating text, so a failure past that point just
+        retry (same-provider) or fall back to Groq (different provider)
+        without duplicating text, so a failure past that point just
         propagates."""
         config = types.GenerateContentConfig(max_output_tokens=MAX_TOKENS)
         attempt = 0
@@ -77,10 +102,21 @@ class AIService:
                 return
             except APIError as exc:
                 retryable = not yielded_any and exc.code in RETRY_STATUSES and attempt < MAX_RETRIES - 1
-                if not retryable:
+                if retryable:
+                    attempt += 1
+                    time.sleep(2**attempt)
+                    continue
+                if yielded_any:
                     raise AIServiceError("AI service unavailable") from exc
-                attempt += 1
-                time.sleep(2**attempt)
+                if not os.environ.get("GROQ_API_KEY"):
+                    raise AIServiceError("AI service unavailable") from exc
+                logger.warning("Gemini failed, falling back to Groq: %s", exc)
+                try:
+                    yield from _groq_stream(prompt)
+                    return
+                except Exception as fallback_exc:
+                    logger.exception("Groq fallback also failed")
+                    raise AIServiceError("AI service unavailable") from fallback_exc
 
     def explain_stream(self, text: str, input_type: str) -> Iterator[str]:
         prompt = f"""You are a senior engineer helping a confused intern understand something at work.
@@ -158,6 +194,40 @@ Respond in JSON with:
             "resume_bullets": _as_list(data.get("resume_bullets")),
             "talking_points": _as_text(data.get("talking_points")),
         }
+
+
+def _groq_headers() -> dict:
+    return {
+        "Authorization": f"Bearer {os.environ['GROQ_API_KEY']}",
+        "Content-Type": "application/json",
+    }
+
+
+def _groq_complete(prompt: str, json_output: bool) -> str:
+    payload = {"model": GROQ_MODEL, "messages": [{"role": "user", "content": prompt}]}
+    if json_output:
+        payload["response_format"] = {"type": "json_object"}
+    response = httpx.post(GROQ_API_URL, headers=_groq_headers(), json=payload, timeout=30)
+    response.raise_for_status()
+    text = response.json()["choices"][0]["message"]["content"]
+    if not text:
+        raise AIServiceError("AI service unavailable")
+    return text
+
+
+def _groq_stream(prompt: str) -> Iterator[str]:
+    payload = {"model": GROQ_MODEL, "messages": [{"role": "user", "content": prompt}], "stream": True}
+    with httpx.stream("POST", GROQ_API_URL, headers=_groq_headers(), json=payload, timeout=30) as response:
+        response.raise_for_status()
+        for line in response.iter_lines():
+            if not line.startswith("data: "):
+                continue
+            data = line[len("data: ") :].strip()
+            if data == "[DONE]":
+                return
+            delta = json.loads(data).get("choices", [{}])[0].get("delta", {}).get("content")
+            if delta:
+                yield delta
 
 
 SECTION_MARKERS = {

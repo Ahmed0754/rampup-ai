@@ -57,6 +57,10 @@ If you set the project up earlier, apply new tables by running the files in
 Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
 (sign in with a Google account — no credit card, generous free tier).
 
+Optionally, get a free key from [Groq](https://console.groq.com/keys) too and set it as
+`GROQ_API_KEY`. If Gemini fails or is rate-limited, the same request automatically retries against
+Groq instead of erroring out — skipped entirely if unset.
+
 ```bash
 cd backend
 python3 -m venv .venv && source .venv/bin/activate
