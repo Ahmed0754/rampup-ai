@@ -195,6 +195,41 @@ Respond in JSON with:
             "talking_points": _as_text(data.get("talking_points")),
         }
 
+    def suggest_glossary_terms(self, text: str, explanation: str, known_terms: list[str]) -> list[dict]:
+        known = ", ".join(known_terms) if known_terms else "(none yet)"
+        prompt = f"""You are helping an intern build a personal glossary of workplace and technical jargon.
+They pasted this at work:
+
+{text}
+
+It was explained to them as:
+{explanation}
+
+Pick out up to 8 terms from the pasted text that a smart newcomer probably wouldn't know: technical
+terms, tools, internal-sounding names, acronyms, or workplace slang. Skip everyday words, and skip
+anything already in their glossary: {known}
+
+Respond in JSON with:
+- "terms": array of objects, each with
+  - "term": the term as written in the text
+  - "definition": 1-2 sentence plain-English definition, no jargon; if it looks like an internal
+    name you can't know, say what it most likely refers to given the context
+  - "context": a short quote (under 15 words) from the pasted text where it appears
+Return {{"terms": []}} if there's nothing worth adding."""
+        data = _parse_json(self._complete(prompt, json_output=True))
+        raw_terms = data.get("terms")
+        suggestions = []
+        for item in raw_terms if isinstance(raw_terms, list) else []:
+            if not isinstance(item, dict):
+                continue
+            term = _as_text(item.get("term")).strip()
+            definition = _as_text(item.get("definition")).strip()
+            if term and definition:
+                suggestions.append(
+                    {"term": term, "definition": definition, "context": _as_text(item.get("context")).strip() or None}
+                )
+        return suggestions
+
     def generate_internship_recap(self, entries: list[dict]) -> dict:
         """entries: {"week_start", "type", "text"} dicts, oldest first."""
         log = "\n".join(f"[week of {e['week_start']}] ({e['type']}) {e['text']}" for e in entries)

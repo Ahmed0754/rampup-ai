@@ -102,3 +102,51 @@ class InternshipRecapResponse(BaseModel):
     last_week: str
     weeks_covered: int
     entry_count: int
+
+
+class GlossaryTermCreate(BaseModel):
+    term: str = Field(min_length=1, max_length=200)
+    definition: str = Field(min_length=1, max_length=2_000)
+    context: Optional[str] = Field(default=None, max_length=500)
+    paste_id: Optional[str] = None
+
+
+class GlossaryTermsCreate(BaseModel):
+    terms: list[GlossaryTermCreate] = Field(min_length=1, max_length=50)
+
+
+class GlossaryTermUpdate(BaseModel):
+    term: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    definition: Optional[str] = Field(default=None, min_length=1, max_length=2_000)
+
+
+class GlossaryTerm(BaseModel):
+    id: str
+    term: str
+    definition: str
+    context: Optional[str] = None
+    paste_id: Optional[str] = None
+    created_at: str
+
+
+class GlossaryListResponse(BaseModel):
+    terms: list[GlossaryTerm]
+
+
+class GlossarySaveResponse(BaseModel):
+    saved: list[GlossaryTerm]
+    skipped: list[str]
+
+
+class GlossarySuggestRequest(BaseModel):
+    paste_id: str
+
+
+class GlossarySuggestion(BaseModel):
+    term: str
+    definition: str
+    context: Optional[str] = None
+
+
+class GlossarySuggestResponse(BaseModel):
+    suggestions: list[GlossarySuggestion]

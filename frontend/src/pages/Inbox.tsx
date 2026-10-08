@@ -4,6 +4,7 @@ import toast from "react-hot-toast"
 import PasteInbox from "../components/PasteInbox.tsx"
 import ExplainOutput from "../components/ExplainOutput.tsx"
 import ExplainChat from "../components/ExplainChat.tsx"
+import GlossarySuggestions from "../components/GlossarySuggestions.tsx"
 import { explainTextStream } from "../lib/api"
 import type { ExplainResponse } from "../lib/api"
 
@@ -51,6 +52,11 @@ export default function Inbox() {
       {result && (
         <>
           <ExplainOutput result={result} onGenerateReply={handleGenerateReply} />
+          {result.paste_id && (
+            <div className="mt-4">
+              <GlossarySuggestions key={result.paste_id} pasteId={result.paste_id} />
+            </div>
+          )}
           <div className="mt-6">
             {result.paste_id ? (
               <ExplainChat pasteId={result.paste_id} />

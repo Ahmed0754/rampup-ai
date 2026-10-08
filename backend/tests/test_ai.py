@@ -76,6 +76,31 @@ def test_weekly_summary_coerces_list_fields_to_strings(service):
     assert result["resume_bullets"] == ["Built X", "Shipped Y"]
 
 
+def test_suggest_glossary_terms_drops_malformed_items(service):
+    _stub_complete(
+        service,
+        {
+            "terms": [
+                {"term": "Feature flag", "definition": "A switch", "context": "behind a flag"},
+                {"term": "", "definition": "no name"},
+                {"term": "No definition"},
+                "not an object",
+                {"term": " RLS ", "definition": ["Row level", "security"]},
+            ]
+        },
+    )
+    result = service.suggest_glossary_terms("text", "explanation", [])
+    assert result == [
+        {"term": "Feature flag", "definition": "A switch", "context": "behind a flag"},
+        {"term": "RLS", "definition": "Row level\nsecurity", "context": None},
+    ]
+
+
+def test_suggest_glossary_terms_handles_missing_terms_key(service):
+    _stub_complete(service, {"something": "else"})
+    assert service.suggest_glossary_terms("text", "explanation", ["CI"]) == []
+
+
 def test_internship_recap_normalises_fields(service):
     _stub_complete(
         service,

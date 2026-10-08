@@ -195,3 +195,53 @@ export async function generateResumeBulletsStream(
 ): Promise<ResumeBulletsResponse> {
   return streamNdjson<ResumeBulletsResponse>("/api/resume-bullets", { description }, onChunk)
 }
+
+export interface GlossaryTerm {
+  id: string
+  term: string
+  definition: string
+  context: string | null
+  paste_id: string | null
+  created_at: string
+}
+
+export interface GlossaryTermInput {
+  term: string
+  definition: string
+  context?: string | null
+  paste_id?: string | null
+}
+
+export async function listGlossary(): Promise<GlossaryTerm[]> {
+  const { data } = await api.get<{ terms: GlossaryTerm[] }>("/api/glossary")
+  return data.terms
+}
+
+export async function addGlossaryTerms(terms: GlossaryTermInput[]): Promise<{ saved: GlossaryTerm[]; skipped: string[] }> {
+  const { data } = await api.post<{ saved: GlossaryTerm[]; skipped: string[] }>("/api/glossary", { terms })
+  return data
+}
+
+export async function updateGlossaryTerm(
+  id: string,
+  changes: { term?: string; definition?: string },
+): Promise<GlossaryTerm> {
+  const { data } = await api.patch<GlossaryTerm>(`/api/glossary/${id}`, changes)
+  return data
+}
+
+export async function deleteGlossaryTerm(id: string): Promise<void> {
+  await api.delete(`/api/glossary/${id}`)
+}
+
+export async function suggestGlossaryTerms(pasteId: string): Promise<GlossaryTermInput[]> {
+  const { data } = await api.post<{ suggestions: GlossaryTermInput[] }>("/api/glossary/suggest", {
+    paste_id: pasteId,
+  })
+  return data.suggestions
+}
+
+// axios errors carry the FastAPI `detail` message on response.data.
+export function errorDetail(err: unknown): string {
+  return (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Something went wrong"
+}

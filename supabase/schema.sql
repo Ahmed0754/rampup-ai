@@ -56,12 +56,25 @@ CREATE TABLE explain_chat_messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE glossary_terms (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  term TEXT NOT NULL,
+  definition TEXT NOT NULL,
+  context TEXT,
+  paste_id UUID REFERENCES pastes(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX glossary_terms_user_term_idx ON glossary_terms (user_id, lower(term));
+
 ALTER TABLE pastes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE replies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE progress_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE weekly_summaries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE resume_bullets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE explain_chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE glossary_terms ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users see own pastes" ON pastes FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users see own replies" ON replies FOR ALL USING (auth.uid() = user_id);
@@ -69,3 +82,4 @@ CREATE POLICY "Users see own progress" ON progress_entries FOR ALL USING (auth.u
 CREATE POLICY "Users see own summaries" ON weekly_summaries FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users see own resume bullets" ON resume_bullets FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users see own explain chat" ON explain_chat_messages FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users see own glossary" ON glossary_terms FOR ALL USING (auth.uid() = user_id);

@@ -8,6 +8,7 @@ const navItems = [
   { to: "/progress", label: "Progress Tracker" },
   { to: "/resume", label: "Resume Bullets" },
   { to: "/recap", label: "Internship Recap" },
+  { to: "/glossary", label: "Glossary" },
   { to: "/history", label: "History" },
 ]
 

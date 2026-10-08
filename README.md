@@ -40,6 +40,9 @@ rampup-ai/
 - **Internship Recap** — turn your entire progress log into one end-of-internship summary:
   highlights, skills picked up, challenges worked through, talking points for your final review,
   and de-duplicated resume bullets. Exportable as Markdown or PDF.
+- **Glossary** — after any explanation, pull the jargon out of what you pasted into a personal
+  glossary with plain-English definitions. Search it, edit it, add your own terms, or quiz
+  yourself with flashcards.
 - **Weekly nudge** — an automated email to anyone who hasn't logged progress yet that week, so
   Weekly Summary always has something to work with.
 - **History** — browse everything you've explained, replied to, summarized, or turned into resume
@@ -52,8 +55,8 @@ rampup-ai/
 ### 1. Supabase
 
 Create a Supabase project and run `supabase/schema.sql` in the SQL editor. This creates the
-`pastes`, `replies`, `progress_entries`, `weekly_summaries`, `resume_bullets`, and
-`explain_chat_messages` tables with row-level security scoped to `auth.uid()`.
+`pastes`, `replies`, `progress_entries`, `weekly_summaries`, `resume_bullets`,
+`explain_chat_messages`, and `glossary_terms` tables with row-level security scoped to `auth.uid()`.
 
 If you set the project up earlier, apply new tables by running the files in
 `supabase/migrations/` in order.

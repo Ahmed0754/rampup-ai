@@ -230,3 +230,64 @@ def get_all_progress_entries(user_id: str) -> list[dict]:
     except Exception:
         logger.exception("Failed to fetch all progress entries from Supabase")
         return []
+
+
+GLOSSARY_FIELDS = "id, term, definition, context, paste_id, created_at"
+
+
+def get_glossary_terms(user_id: str) -> list[dict] | None:
+    """None (rather than []) on failure, so callers that dedupe against the
+    glossary don't mistake an outage for an empty glossary."""
+    client = get_supabase()
+    if client is None:
+        return []
+    try:
+        result = client.table("glossary_terms").select(GLOSSARY_FIELDS).eq("user_id", user_id).execute()
+        return sorted(result.data or [], key=lambda row: row["term"].lower())
+    except Exception:
+        logger.exception("Failed to fetch glossary terms from Supabase")
+        return None
+
+
+def save_glossary_terms(user_id: str, terms: list[dict]) -> list[dict] | None:
+    client = get_supabase()
+    if client is None:
+        return None
+    try:
+        result = (
+            client.table("glossary_terms").insert([{**term, "user_id": user_id} for term in terms]).execute()
+        )
+        return result.data or []
+    except Exception:
+        logger.exception("Failed to save glossary terms to Supabase")
+        return None
+
+
+def update_glossary_term(user_id: str, term_id: str, changes: dict) -> dict | None:
+    client = get_supabase()
+    if client is None:
+        return None
+    try:
+        result = (
+            client.table("glossary_terms")
+            .update(changes)
+            .eq("id", term_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+        return result.data[0] if result.data else None
+    except Exception:
+        logger.exception("Failed to update glossary term in Supabase")
+        return None
+
+
+def delete_glossary_term(user_id: str, term_id: str) -> bool:
+    client = get_supabase()
+    if client is None:
+        return False
+    try:
+        result = client.table("glossary_terms").delete().eq("id", term_id).eq("user_id", user_id).execute()
+        return bool(result.data)
+    except Exception:
+        logger.exception("Failed to delete glossary term from Supabase")
+        return False
