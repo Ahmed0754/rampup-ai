@@ -2,6 +2,7 @@ from datetime import date
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 
 from app.services.nudge import (
@@ -82,6 +83,16 @@ def test_run_raises_when_resend_key_missing(monkeypatch):
     monkeypatch.delenv("RESEND_API_KEY", raising=False)
     with pytest.raises(NudgeConfigError):
         run()
+
+
+def test_run_explains_unreachable_supabase(monkeypatch):
+    monkeypatch.setattr("app.services.nudge.get_supabase", lambda: MagicMock())
+    monkeypatch.setenv("RESEND_API_KEY", "key-123")
+    monkeypatch.setenv("SUPABASE_URL", "https://paused.supabase.co")
+
+    with patch("app.services.nudge.list_all_users", side_effect=httpx.ConnectError("Name or service not known")):
+        with pytest.raises(NudgeConfigError, match="paused.supabase.co.*restore it"):
+            run()
 
 
 def test_run_sends_only_to_users_without_entries_this_week(monkeypatch):

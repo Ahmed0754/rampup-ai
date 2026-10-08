@@ -11,6 +11,7 @@ and REMINDER_FROM_EMAIL are optional (see app/services/nudge.py for defaults).
 """
 
 import json
+import sys
 
 from dotenv import load_dotenv
 
@@ -19,4 +20,9 @@ load_dotenv()
 from app.services.nudge import run  # noqa: E402
 
 if __name__ == "__main__":
-    print(json.dumps(run(), indent=2))
+    summary = run()
+    print(json.dumps(summary, indent=2))
+    # Individual send failures are logged and collected rather than raised; still fail
+    # the job so they show up as a red run instead of a silent green one.
+    if summary["failed"]:
+        sys.exit(1)

@@ -86,8 +86,16 @@ def run() -> dict:
     week_start = current_week_start()
     html = build_email_html(app_url)
 
+    try:
+        users = list_all_users(client)
+    except httpx.ConnectError as exc:
+        raise NudgeConfigError(
+            f"Can't reach Supabase at {os.environ.get('SUPABASE_URL')} ({exc}). Free-tier projects are "
+            "paused after a week of inactivity - restore it from the Supabase dashboard."
+        ) from exc
+
     sent, skipped, failed = [], [], []
-    for user in list_all_users(client):
+    for user in users:
         if not user.email:
             continue
         if has_logged_this_week(client, user.id, week_start):
