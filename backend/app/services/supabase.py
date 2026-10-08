@@ -291,3 +291,42 @@ def delete_glossary_term(user_id: str, term_id: str) -> bool:
     except Exception:
         logger.exception("Failed to delete glossary term from Supabase")
         return False
+
+
+def get_progress_entries_since(user_id: str, since: str) -> list[dict]:
+    client = get_supabase()
+    if client is None:
+        return []
+    try:
+        result = (
+            client.table("progress_entries")
+            .select("entry_text, entry_type, created_at")
+            .eq("user_id", user_id)
+            .gte("created_at", since)
+            .order("created_at", desc=False)
+            .execute()
+        )
+        return result.data or []
+    except Exception:
+        logger.exception("Failed to fetch recent progress entries from Supabase")
+        return []
+
+
+def get_pastes_since(user_id: str, since: str, limit: int = 20) -> list[dict]:
+    client = get_supabase()
+    if client is None:
+        return []
+    try:
+        result = (
+            client.table("pastes")
+            .select("raw_text, explanation, action_items, created_at")
+            .eq("user_id", user_id)
+            .gte("created_at", since)
+            .order("created_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        return list(reversed(result.data or []))
+    except Exception:
+        logger.exception("Failed to fetch recent pastes from Supabase")
+        return []

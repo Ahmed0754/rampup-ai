@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -150,3 +151,18 @@ class GlossarySuggestion(BaseModel):
 
 class GlossarySuggestResponse(BaseModel):
     suggestions: list[GlossarySuggestion]
+
+
+class StandupRequest(BaseModel):
+    # Start of the user's previous workday in their local time, as an ISO timestamp
+    # with offset. The frontend computes it so "yesterday" means the user's yesterday.
+    since: datetime
+    notes: Optional[str] = Field(default=None, max_length=2_000)
+
+
+class StandupResponse(BaseModel):
+    yesterday: list[str]
+    today: list[str]
+    blockers: list[str]
+    entry_count: int
+    paste_count: int

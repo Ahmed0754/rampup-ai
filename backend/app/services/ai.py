@@ -195,6 +195,44 @@ Respond in JSON with:
             "talking_points": _as_text(data.get("talking_points")),
         }
 
+    def generate_standup(self, entries: list[dict], pastes: list[dict], notes: str) -> dict:
+        """entries: {"type", "text"} progress entries since the last workday.
+        pastes: {"text", "action_items"} things explained in that window."""
+        progress = "\n".join(f"- ({e['type']}) {e['text']}" for e in entries) or "(nothing logged)"
+        explained = (
+            "\n".join(
+                f"- Message: {p['text']}\n  Action items it produced: {'; '.join(p['action_items']) or 'none'}"
+                for p in pastes
+            )
+            or "(nothing)"
+        )
+        prompt = f"""You are helping an intern write their daily standup update.
+
+What they logged in their progress tracker since their last workday:
+{progress}
+
+Messages, errors, and tickets they had explained to them in that time (with the action items each produced):
+{explained}
+
+Their own notes for today: {notes or "(none)"}
+
+Respond in JSON with:
+- "yesterday": array of what they got done or worked on, from the progress log ("win",
+  "task_completed", and "learned" entries); also include work clearly implied by the
+  messages they dealt with
+- "today": array of what they'll work on today, from their notes first, then open action items
+  that still look relevant; at most 5
+- "blockers": array of anything blocking them, from "blocker" entries and their notes; empty if none
+
+Each item is one short first-person line (under 20 words) without a leading dash, like you'd say
+it out loud in standup. Merge duplicates. Never invent work that isn't supported by the input."""
+        data = _parse_json(self._complete(prompt, json_output=True))
+        return {
+            "yesterday": _as_list(data.get("yesterday")),
+            "today": _as_list(data.get("today")),
+            "blockers": _as_list(data.get("blockers")),
+        }
+
     def suggest_glossary_terms(self, text: str, explanation: str, known_terms: list[str]) -> list[dict]:
         known = ", ".join(known_terms) if known_terms else "(none yet)"
         prompt = f"""You are helping an intern build a personal glossary of workplace and technical jargon.

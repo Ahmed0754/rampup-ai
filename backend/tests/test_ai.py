@@ -76,6 +76,12 @@ def test_weekly_summary_coerces_list_fields_to_strings(service):
     assert result["resume_bullets"] == ["Built X", "Shipped Y"]
 
 
+def test_standup_normalises_fields(service):
+    _stub_complete(service, {"yesterday": "Fixed a test", "today": ["Pick up PLAT-482"]})
+    result = service.generate_standup([{"type": "win", "text": "Fixed a test"}], [], "")
+    assert result == {"yesterday": ["Fixed a test"], "today": ["Pick up PLAT-482"], "blockers": []}
+
+
 def test_suggest_glossary_terms_drops_malformed_items(service):
     _stub_complete(
         service,

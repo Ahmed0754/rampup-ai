@@ -57,3 +57,11 @@ export function computeStreak(weekStartsWithEntries: string[]): number {
   }
   return count
 }
+
+/** Local midnight at the start of the previous workday: Friday if today is
+ * Saturday, Sunday, or Monday, otherwise yesterday. */
+export function getPreviousWorkdayStart(now: Date = new Date()): Date {
+  const day = now.getDay()
+  const daysBack = day === 1 ? 3 : day === 0 ? 2 : 1
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysBack)
+}

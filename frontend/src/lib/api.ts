@@ -245,3 +245,16 @@ export async function suggestGlossaryTerms(pasteId: string): Promise<GlossaryTer
 export function errorDetail(err: unknown): string {
   return (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Something went wrong"
 }
+
+export interface StandupResponse {
+  yesterday: string[]
+  today: string[]
+  blockers: string[]
+  entry_count: number
+  paste_count: number
+}
+
+export async function generateStandup(since: Date, notes: string): Promise<StandupResponse> {
+  const { data } = await api.post<StandupResponse>("/api/standup", { since: since.toISOString(), notes })
+  return data
+}

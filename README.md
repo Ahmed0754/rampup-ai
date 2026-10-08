@@ -34,6 +34,8 @@ rampup-ai/
 - **Reply Generator** — turn any message into a draft reply in one of four tones: casual,
   professional, manager-safe, or confused-but-trying.
 - **Progress Tracker** — log wins, things learned, blockers, and completed tasks per week.
+- **Daily Standup** — a ready-to-paste "yesterday / today / blockers" update built from what
+  you've logged and had explained since your last workday, plus any notes you add.
 - **Weekly Summary** — turn a week of progress entries into a status update, talking points for
   your check-in, and resume bullets.
 - **Resume Bullets** — turn rough notes about your work into strong, metric-driven resume bullets.

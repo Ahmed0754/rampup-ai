@@ -6,6 +6,7 @@ const navItems = [
   { to: "/inbox", label: "Explain This" },
   { to: "/reply", label: "Reply Generator" },
   { to: "/progress", label: "Progress Tracker" },
+  { to: "/standup", label: "Daily Standup" },
   { to: "/resume", label: "Resume Bullets" },
   { to: "/recap", label: "Internship Recap" },
   { to: "/glossary", label: "Glossary" },
