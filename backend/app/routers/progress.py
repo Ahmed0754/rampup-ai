@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.deps import get_current_user_id
 from app.models import (
+    InternshipRecap,
+    InternshipRecapResponse,
     ProgressEntryCreate,
     ProgressEntryResponse,
     ProgressListResponse,
@@ -11,6 +13,7 @@ from app.models import (
 )
 from app.services.ai import AIService, AIServiceError
 from app.services.supabase import (
+    get_all_progress_entries,
     get_progress_entries,
     save_progress_entry,
     save_weekly_summary,
@@ -19,6 +22,10 @@ from app.services.supabase import (
 router = APIRouter()
 
 VALID_ENTRY_TYPES = {"win", "learned", "blocker", "task_completed"}
+
+# Cap on how much of the progress log goes into the recap prompt. A long internship
+# can have hundreds of entries; past this, the oldest are dropped first.
+RECAP_MAX_CHARS = 60_000
 
 
 @router.post("/progress", response_model=ProgressEntryResponse)
@@ -75,3 +82,36 @@ def generate_weekly_summary(payload: WeeklySummaryRequest, user_id: str = Depend
     )
 
     return WeeklySummaryResponse(summary=summary, saved=summary_id is not None)
+
+
+@router.post("/progress/recap", response_model=InternshipRecapResponse)
+def generate_internship_recap(user_id: str = Depends(get_current_user_id)):
+    entries = get_all_progress_entries(user_id=user_id)
+    if not entries:
+        raise HTTPException(status_code=422, detail="Log some progress first - there's nothing to recap yet")
+
+    trimmed = [{"week_start": e["week_start"], "type": e["entry_type"], "text": e["entry_text"]} for e in entries]
+    budget, kept = RECAP_MAX_CHARS, []
+    for entry in reversed(trimmed):
+        budget -= len(entry["text"])
+        if budget < 0 and kept:
+            break
+        kept.append(entry)
+    kept.reverse()
+
+    try:
+        service = AIService()
+        result = service.generate_internship_recap(kept)
+    except AIServiceError as exc:
+        message = str(exc)
+        status_code = 500 if message == "API key not configured" else 502
+        raise HTTPException(status_code=status_code, detail=message) from exc
+
+    weeks = sorted({e["week_start"] for e in kept})
+    return InternshipRecapResponse(
+        recap=InternshipRecap(**result),
+        first_week=weeks[0],
+        last_week=weeks[-1],
+        weeks_covered=len(weeks),
+        entry_count=len(kept),
+    )

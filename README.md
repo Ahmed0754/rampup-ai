@@ -37,6 +37,9 @@ rampup-ai/
 - **Weekly Summary** — turn a week of progress entries into a status update, talking points for
   your check-in, and resume bullets.
 - **Resume Bullets** — turn rough notes about your work into strong, metric-driven resume bullets.
+- **Internship Recap** — turn your entire progress log into one end-of-internship summary:
+  highlights, skills picked up, challenges worked through, talking points for your final review,
+  and de-duplicated resume bullets. Exportable as Markdown or PDF.
 - **Weekly nudge** — an automated email to anyone who hasn't logged progress yet that week, so
   Weekly Summary always has something to work with.
 - **History** — browse everything you've explained, replied to, summarized, or turned into resume

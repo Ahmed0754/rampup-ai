@@ -76,6 +76,25 @@ def test_weekly_summary_coerces_list_fields_to_strings(service):
     assert result["resume_bullets"] == ["Built X", "Shipped Y"]
 
 
+def test_internship_recap_normalises_fields(service):
+    _stub_complete(
+        service,
+        {
+            "headline": ["Grew a lot.", "Shipped a feature."],
+            "highlights": "Shipped export",
+            "skills_learned": ["SQL", "RLS"],
+            "resume_bullets": ["Built X"],
+            "talking_points": ["Ready for more"],
+        },
+    )
+    result = service.generate_internship_recap([{"week_start": "2026-06-01", "type": "win", "text": "did a thing"}])
+    assert result["headline"] == "Grew a lot.\nShipped a feature."
+    assert result["highlights"] == ["Shipped export"]
+    assert result["skills_learned"] == ["SQL", "RLS"]
+    assert result["challenges_overcome"] == []
+    assert result["talking_points"] == ["Ready for more"]
+
+
 def test_parse_explain_sections_happy_path():
     text = (
         "EXPLANATION: your build failed.\n"

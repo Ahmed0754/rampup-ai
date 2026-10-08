@@ -162,6 +162,28 @@ export async function generateWeeklySummary(weekStart: string): Promise<WeeklySu
   return data.summary
 }
 
+export interface InternshipRecap {
+  headline: string
+  highlights: string[]
+  skills_learned: string[]
+  challenges_overcome: string[]
+  resume_bullets: string[]
+  talking_points: string[]
+}
+
+export interface InternshipRecapResponse {
+  recap: InternshipRecap
+  first_week: string
+  last_week: string
+  weeks_covered: number
+  entry_count: number
+}
+
+export async function generateInternshipRecap(): Promise<InternshipRecapResponse> {
+  const { data } = await api.post<InternshipRecapResponse>("/api/progress/recap")
+  return data
+}
+
 export interface ResumeBulletsResponse {
   bullets: string[]
   saved: boolean

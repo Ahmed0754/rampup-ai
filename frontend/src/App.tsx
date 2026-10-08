@@ -9,6 +9,7 @@ import Reply from "./pages/Reply.tsx"
 import Progress from "./pages/Progress.tsx"
 import Resume from "./pages/Resume.tsx"
 import History from "./pages/History.tsx"
+import Recap from "./pages/Recap.tsx"
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth()
@@ -45,6 +46,7 @@ function App() {
         <Route path="reply" element={<Reply />} />
         <Route path="progress" element={<Progress />} />
         <Route path="resume" element={<Resume />} />
+        <Route path="recap" element={<Recap />} />
         <Route path="history" element={<History />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

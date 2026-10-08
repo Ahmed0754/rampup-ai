@@ -211,3 +211,22 @@ def save_weekly_summary(user_id: str, week_start: str, summary: dict) -> str | N
     except Exception:
         logger.exception("Failed to save weekly summary to Supabase")
         return None
+
+
+def get_all_progress_entries(user_id: str) -> list[dict]:
+    client = get_supabase()
+    if client is None:
+        return []
+    try:
+        result = (
+            client.table("progress_entries")
+            .select("entry_text, entry_type, week_start")
+            .eq("user_id", user_id)
+            .order("week_start", desc=False)
+            .order("created_at", desc=False)
+            .execute()
+        )
+        return result.data or []
+    except Exception:
+        logger.exception("Failed to fetch all progress entries from Supabase")
+        return []

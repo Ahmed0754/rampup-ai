@@ -195,6 +195,34 @@ Respond in JSON with:
             "talking_points": _as_text(data.get("talking_points")),
         }
 
+    def generate_internship_recap(self, entries: list[dict]) -> dict:
+        """entries: {"week_start", "type", "text"} dicts, oldest first."""
+        log = "\n".join(f"[week of {e['week_start']}] ({e['type']}) {e['text']}" for e in entries)
+        prompt = f"""You are helping an intern write an end-of-internship recap from their progress log.
+Here is everything they logged, oldest first:
+
+{log}
+
+Look across the whole internship, not week by week: group related work, show how their
+responsibilities grew, and don't repeat the same accomplishment twice.
+
+Respond in JSON with:
+- "headline": 2-3 sentence overview of the internship and its overall impact
+- "highlights": array of 3-6 most significant things they shipped or achieved
+- "skills_learned": array of 3-8 concrete skills, tools, or concepts they picked up
+- "challenges_overcome": array of 1-4 blockers they hit and how they got past them (empty if none)
+- "resume_bullets": array of 4-6 strong, de-duplicated resume bullets with action verbs and metrics where the log supports them; never invent numbers
+- "talking_points": array of 3-5 points for their final review or return-offer conversation"""
+        data = _parse_json(self._complete(prompt, json_output=True))
+        return {
+            "headline": _as_text(data.get("headline")),
+            "highlights": _as_list(data.get("highlights")),
+            "skills_learned": _as_list(data.get("skills_learned")),
+            "challenges_overcome": _as_list(data.get("challenges_overcome")),
+            "resume_bullets": _as_list(data.get("resume_bullets")),
+            "talking_points": _as_list(data.get("talking_points")),
+        }
+
 
 def _groq_headers() -> dict:
     return {

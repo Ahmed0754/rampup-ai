@@ -85,3 +85,20 @@ class ResumeBulletsRequest(BaseModel):
 class ResumeBulletsResponse(BaseModel):
     bullets: list[str]
     saved: bool = False
+
+
+class InternshipRecap(BaseModel):
+    headline: str
+    highlights: list[str]
+    skills_learned: list[str]
+    challenges_overcome: list[str]
+    resume_bullets: list[str]
+    talking_points: list[str]
+
+
+class InternshipRecapResponse(BaseModel):
+    recap: InternshipRecap
+    first_week: str
+    last_week: str
+    weeks_covered: int
+    entry_count: int
