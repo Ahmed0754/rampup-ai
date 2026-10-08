@@ -7,13 +7,21 @@ export function formatDateTime(iso: string): string {
   })
 }
 
+/** YYYY-MM-DD in the user's local timezone. (toISOString() is UTC, which
+ * shifts the date by a day in the evening west of UTC / early morning east of it.) */
+export function toLocalDateString(d: Date): string {
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${d.getFullYear()}-${month}-${day}`
+}
+
 export function getCurrentWeekStart(): string {
   const now = new Date()
   const day = now.getDay()
   const diff = (day === 0 ? -6 : 1) - day
   const monday = new Date(now)
   monday.setDate(now.getDate() + diff)
-  return monday.toISOString().slice(0, 10)
+  return toLocalDateString(monday)
 }
 
 function addDaysToWeekStart(weekStart: string, days: number): string {
