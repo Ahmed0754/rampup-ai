@@ -45,6 +45,9 @@ rampup-ai/
 - **Glossary** — after any explanation, pull the jargon out of what you pasted into a personal
   glossary with plain-English definitions. Search it, edit it, add your own terms, or quiz
   yourself with flashcards.
+- **Mentor Questions** — after any explanation, get 1-3 questions only your team can answer
+  (internal context, conventions, priorities) and save them for your next 1:1. Mark them answered
+  with what you learned, or copy your open questions as an agenda.
 - **Weekly nudge** — an automated email to anyone who hasn't logged progress yet that week, so
   Weekly Summary always has something to work with.
 - **History** — browse everything you've explained, replied to, summarized, or turned into resume

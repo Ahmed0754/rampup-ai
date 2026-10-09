@@ -258,3 +258,48 @@ export async function generateStandup(since: Date, notes: string): Promise<Stand
   const { data } = await api.post<StandupResponse>("/api/standup", { since: since.toISOString(), notes })
   return data
 }
+
+export interface MentorQuestion {
+  id: string
+  question: string
+  context: string | null
+  paste_id: string | null
+  answer: string | null
+  answered_at: string | null
+  created_at: string
+}
+
+export interface MentorQuestionInput {
+  question: string
+  context?: string | null
+  paste_id?: string | null
+}
+
+export async function listMentorQuestions(): Promise<MentorQuestion[]> {
+  const { data } = await api.get<{ questions: MentorQuestion[] }>("/api/questions")
+  return data.questions
+}
+
+export async function addMentorQuestions(questions: MentorQuestionInput[]): Promise<MentorQuestion[]> {
+  const { data } = await api.post<{ questions: MentorQuestion[] }>("/api/questions", { questions })
+  return data.questions
+}
+
+export async function updateMentorQuestion(
+  id: string,
+  changes: { question?: string; answered?: boolean; answer?: string },
+): Promise<MentorQuestion> {
+  const { data } = await api.patch<MentorQuestion>(`/api/questions/${id}`, changes)
+  return data
+}
+
+export async function deleteMentorQuestion(id: string): Promise<void> {
+  await api.delete(`/api/questions/${id}`)
+}
+
+export async function suggestMentorQuestions(pasteId: string): Promise<MentorQuestionInput[]> {
+  const { data } = await api.post<{ suggestions: MentorQuestionInput[] }>("/api/questions/suggest", {
+    paste_id: pasteId,
+  })
+  return data.suggestions
+}

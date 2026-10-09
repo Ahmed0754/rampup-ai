@@ -10,6 +10,7 @@ const navItems = [
   { to: "/resume", label: "Resume Bullets" },
   { to: "/recap", label: "Internship Recap" },
   { to: "/glossary", label: "Glossary" },
+  { to: "/questions", label: "Mentor Questions" },
   { to: "/history", label: "History" },
 ]
 

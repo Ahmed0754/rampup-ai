@@ -12,6 +12,7 @@ import History from "./pages/History.tsx"
 import Recap from "./pages/Recap.tsx"
 import Glossary from "./pages/Glossary.tsx"
 import Standup from "./pages/Standup.tsx"
+import Questions from "./pages/Questions.tsx"
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth()
@@ -51,6 +52,7 @@ function App() {
         <Route path="resume" element={<Resume />} />
         <Route path="recap" element={<Recap />} />
         <Route path="glossary" element={<Glossary />} />
+        <Route path="questions" element={<Questions />} />
         <Route path="history" element={<History />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
