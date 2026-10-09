@@ -233,6 +233,42 @@ it out loud in standup. Merge duplicates. Never invent work that isn't supported
             "blockers": _as_list(data.get("blockers")),
         }
 
+    def suggest_mentor_questions(self, text: str, explanation: str, chat: list[dict], open_questions: list[str]) -> list[dict]:
+        convo = "\n".join(f"{'Intern' if t.get('role') == 'user' else 'Assistant'}: {t.get('content', '')}" for t in chat)
+        convo_block = f"\nFollow-up conversation so far:\n{convo}\n" if convo else ""
+        already = "\n".join(f"- {q}" for q in open_questions) or "(none)"
+        prompt = f"""An intern pasted this at work:
+
+{text}
+
+An AI assistant explained it as:
+{explanation}
+{convo_block}
+Suggest 1-3 questions the intern should bring to their mentor or a teammate: things an outside
+assistant genuinely can't answer, like internal context, team conventions, priorities, who owns
+what, history behind a decision, or what "done" looks like here. Don't suggest anything the
+explanation already answers or that a quick web search would.
+
+Each question should be specific and ready to ask as written - polite, short, and showing the
+intern already did their homework. Skip anything too similar to questions they already have:
+{already}
+
+Respond in JSON with:
+- "questions": array of objects, each with
+  - "question": the question, phrased as the intern would ask it
+  - "context": a short note (under 15 words) on what prompted it
+Return {{"questions": []}} if nothing here needs a human."""
+        data = _parse_json(self._complete(prompt, json_output=True))
+        raw = data.get("questions")
+        suggestions = []
+        for item in raw if isinstance(raw, list) else []:
+            if not isinstance(item, dict):
+                continue
+            question = _as_text(item.get("question")).strip()
+            if question:
+                suggestions.append({"question": question, "context": _as_text(item.get("context")).strip() or None})
+        return suggestions
+
     def suggest_glossary_terms(self, text: str, explanation: str, known_terms: list[str]) -> list[dict]:
         known = ", ".join(known_terms) if known_terms else "(none yet)"
         prompt = f"""You are helping an intern build a personal glossary of workplace and technical jargon.

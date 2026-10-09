@@ -82,6 +82,23 @@ def test_standup_normalises_fields(service):
     assert result == {"yesterday": ["Fixed a test"], "today": ["Pick up PLAT-482"], "blockers": []}
 
 
+def test_suggest_mentor_questions_drops_malformed_items(service):
+    _stub_complete(
+        service,
+        {"questions": [
+            {"question": "Who owns the payments service?", "context": "ticket mentions it"},
+            {"question": "  "},
+            "nope",
+            {"question": "Is there a staging checklist?"},
+        ]},
+    )
+    result = service.suggest_mentor_questions("text", "explanation", [], [])
+    assert result == [
+        {"question": "Who owns the payments service?", "context": "ticket mentions it"},
+        {"question": "Is there a staging checklist?", "context": None},
+    ]
+
+
 def test_suggest_glossary_terms_drops_malformed_items(service):
     _stub_complete(
         service,

@@ -58,7 +58,7 @@ rampup-ai/
 
 Create a Supabase project and run `supabase/schema.sql` in the SQL editor. This creates the
 `pastes`, `replies`, `progress_entries`, `weekly_summaries`, `resume_bullets`,
-`explain_chat_messages`, and `glossary_terms` tables with row-level security scoped to `auth.uid()`.
+`explain_chat_messages`, `glossary_terms`, and `mentor_questions` tables with row-level security scoped to `auth.uid()`.
 
 If you set the project up earlier, apply new tables by running the files in
 `supabase/migrations/` in order.

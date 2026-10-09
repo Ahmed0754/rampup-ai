@@ -166,3 +166,47 @@ class StandupResponse(BaseModel):
     blockers: list[str]
     entry_count: int
     paste_count: int
+
+
+class MentorQuestionCreate(BaseModel):
+    question: str = Field(min_length=1, max_length=1_000)
+    context: Optional[str] = Field(default=None, max_length=500)
+    paste_id: Optional[str] = None
+
+
+class MentorQuestionsCreate(BaseModel):
+    questions: list[MentorQuestionCreate] = Field(min_length=1, max_length=20)
+
+
+class MentorQuestionUpdate(BaseModel):
+    question: Optional[str] = Field(default=None, min_length=1, max_length=1_000)
+    # true marks it answered (with an optional answer note), false reopens it.
+    answered: Optional[bool] = None
+    answer: Optional[str] = Field(default=None, max_length=2_000)
+
+
+class MentorQuestion(BaseModel):
+    id: str
+    question: str
+    context: Optional[str] = None
+    paste_id: Optional[str] = None
+    answer: Optional[str] = None
+    answered_at: Optional[str] = None
+    created_at: str
+
+
+class MentorQuestionListResponse(BaseModel):
+    questions: list[MentorQuestion]
+
+
+class MentorQuestionSuggestRequest(BaseModel):
+    paste_id: str
+
+
+class MentorQuestionSuggestion(BaseModel):
+    question: str
+    context: Optional[str] = None
+
+
+class MentorQuestionSuggestResponse(BaseModel):
+    suggestions: list[MentorQuestionSuggestion]

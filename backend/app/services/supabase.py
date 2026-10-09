@@ -330,3 +330,70 @@ def get_pastes_since(user_id: str, since: str, limit: int = 20) -> list[dict]:
     except Exception:
         logger.exception("Failed to fetch recent pastes from Supabase")
         return []
+
+
+MENTOR_QUESTION_FIELDS = "id, question, context, paste_id, answer, answered_at, created_at"
+
+
+def get_mentor_questions(user_id: str) -> list[dict] | None:
+    client = get_supabase()
+    if client is None:
+        return []
+    try:
+        result = (
+            client.table("mentor_questions")
+            .select(MENTOR_QUESTION_FIELDS)
+            .eq("user_id", user_id)
+            .order("created_at", desc=False)
+            .execute()
+        )
+        return result.data or []
+    except Exception:
+        logger.exception("Failed to fetch mentor questions from Supabase")
+        return None
+
+
+def save_mentor_questions(user_id: str, questions: list[dict]) -> list[dict] | None:
+    client = get_supabase()
+    if client is None:
+        return None
+    try:
+        result = (
+            client.table("mentor_questions")
+            .insert([{**question, "user_id": user_id} for question in questions])
+            .execute()
+        )
+        return result.data or []
+    except Exception:
+        logger.exception("Failed to save mentor questions to Supabase")
+        return None
+
+
+def update_mentor_question(user_id: str, question_id: str, changes: dict) -> dict | None:
+    client = get_supabase()
+    if client is None:
+        return None
+    try:
+        result = (
+            client.table("mentor_questions")
+            .update(changes)
+            .eq("id", question_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+        return result.data[0] if result.data else None
+    except Exception:
+        logger.exception("Failed to update mentor question in Supabase")
+        return None
+
+
+def delete_mentor_question(user_id: str, question_id: str) -> bool:
+    client = get_supabase()
+    if client is None:
+        return False
+    try:
+        result = client.table("mentor_questions").delete().eq("id", question_id).eq("user_id", user_id).execute()
+        return bool(result.data)
+    except Exception:
+        logger.exception("Failed to delete mentor question from Supabase")
+        return False

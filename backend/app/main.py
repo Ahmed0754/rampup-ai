@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
-from app.routers import explain, glossary, progress, reply, resume, standup  # noqa: E402
+from app.routers import explain, glossary, progress, questions, reply, resume, standup  # noqa: E402
 
 app = FastAPI(title="RampUp AI API")
 
@@ -37,6 +37,7 @@ app.include_router(progress.router, prefix="/api")
 app.include_router(resume.router, prefix="/api")
 app.include_router(glossary.router, prefix="/api")
 app.include_router(standup.router, prefix="/api")
+app.include_router(questions.router, prefix="/api")
 
 
 @app.get("/health")
