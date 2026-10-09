@@ -5,6 +5,7 @@ import PasteInbox from "../components/PasteInbox.tsx"
 import ExplainOutput from "../components/ExplainOutput.tsx"
 import ExplainChat from "../components/ExplainChat.tsx"
 import GlossarySuggestions from "../components/GlossarySuggestions.tsx"
+import MentorQuestionSuggestions from "../components/MentorQuestionSuggestions.tsx"
 import { explainTextStream } from "../lib/api"
 import type { ExplainResponse } from "../lib/api"
 
@@ -53,8 +54,9 @@ export default function Inbox() {
         <>
           <ExplainOutput result={result} onGenerateReply={handleGenerateReply} />
           {result.paste_id && (
-            <div className="mt-4">
-              <GlossarySuggestions key={result.paste_id} pasteId={result.paste_id} />
+            <div className="mt-4 space-y-4">
+              <GlossarySuggestions key={`glossary-${result.paste_id}`} pasteId={result.paste_id} />
+              <MentorQuestionSuggestions key={`questions-${result.paste_id}`} pasteId={result.paste_id} />
             </div>
           )}
           <div className="mt-6">
