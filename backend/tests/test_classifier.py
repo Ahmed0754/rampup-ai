@@ -87,3 +87,65 @@ def test_classify_ticket_is_case_insensitive():
 
 def test_classify_meetings_plural():
     assert classify_input("Notes from yesterday's meetings") == "meeting_note"
+
+
+def test_classify_python_snippet_as_code():
+    text = "def total(items):\n    result = 0\n    for item in items:\n        result += item.price\n    return result"
+    assert classify_input(text) == "code"
+
+
+def test_classify_js_snippet_as_code():
+    text = "const user = await getUser(id);\nif (!user) {\n  return null;\n}\nsetUser(user);"
+    assert classify_input(text) == "code"
+
+
+def test_classify_sql_as_code():
+    text = "SELECT id, email\nFROM users\nWHERE created_at > now() - interval '7 days';\n"
+    assert classify_input(text) == "code"
+
+
+def test_classify_fenced_block_as_code():
+    assert classify_input("what does this do?\n```\nx = [i for i in y]\n```") == "code"
+
+
+def test_python_snippet_with_except_clause_is_code_not_error():
+    text = "try:\n    value = int(raw)\nexcept ValueError:\n    value = 0\nreturn value"
+    assert classify_input(text) == "code"
+
+
+def test_classify_camelcase_exception_names_as_error():
+    assert classify_input("TypeError: Cannot read properties of undefined (reading 'map')") == "error"
+    assert classify_input("java.lang.NullPointerException thrown in OrderService") == "error"
+
+
+def test_classify_python_stack_frame_as_error():
+    text = 'File "app/main.py", line 12, in <module>\n    run()\nKeyError: \'user_id\''
+    assert classify_input(text) == "error"
+
+
+def test_classify_js_stack_trace_as_error_not_code():
+    text = (
+        "Uncaught (in promise) undefined is not a function\n"
+        "    at handleClick (Button.tsx:42:13)\n"
+        "    at onClick (App.tsx:10:5)"
+    )
+    assert classify_input(text) == "error"
+
+
+def test_classify_go_panic_as_error():
+    assert classify_input("panic: runtime error: index out of range [3] with length 3") == "error"
+
+
+def test_message_mentioning_a_function_is_not_code():
+    text = "@sam I think getUser() is returning null sometimes\ncan you take a look when you're free?"
+    assert classify_input(text) == "slack"
+
+
+def test_prose_with_a_single_semicolon_line_is_not_code():
+    text = "Dear team;\n\nThanks for a great quarter. Let's keep the momentum going into next year."
+    assert classify_input(text) == "email"
+
+
+def test_lowercase_select_in_prose_is_not_sql():
+    text = "Please select the right template\nfrom the dropdown before the meeting."
+    assert classify_input(text) == "meeting_note"
