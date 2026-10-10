@@ -31,6 +31,9 @@ rampup-ai/
 - **Explain This** — paste anything and get a plain-English explanation, what the sender actually
   wants, the single most important next step, and a checklist of action items. Streams in as it
   generates, and you can ask follow-up questions right there ("wait, what does that mean?").
+  Code snippets and errors (stack traces, `TypeError: …`, Go panics) are detected automatically
+  and get a debugging-focused explanation instead: what the code does or what the error means,
+  where it's likely to break or the most likely cause, and concrete steps to dig in.
 - **Reply Generator** — turn any message into a draft reply in one of four tones: casual,
   professional, manager-safe, or confused-but-trying.
 - **Progress Tracker** — log wins, things learned, blockers, and completed tasks per week.
