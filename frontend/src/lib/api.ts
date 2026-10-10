@@ -109,8 +109,14 @@ async function streamNdjson<T>(path: string, body: unknown, onChunk: (text: stri
   return done
 }
 
-export async function explainTextStream(text: string, onChunk: (text: string) => void): Promise<ExplainResponse> {
-  return streamNdjson<ExplainResponse>("/api/explain", { text }, onChunk)
+export type ExplainMode = "auto" | "code"
+
+export async function explainTextStream(
+  text: string,
+  onChunk: (text: string) => void,
+  mode: ExplainMode = "auto",
+): Promise<ExplainResponse> {
+  return streamNdjson<ExplainResponse>("/api/explain", { text, mode }, onChunk)
 }
 
 export async function generateReplyStream(

@@ -16,6 +16,7 @@ const TABS: { key: TabKey; label: string; table: string }[] = [
 
 const TYPE_LABELS: Record<string, string> = {
   error: "Terminal Error",
+  code: "Code",
   slack: "Slack Message",
   email: "Email",
   jira: "Jira Ticket",

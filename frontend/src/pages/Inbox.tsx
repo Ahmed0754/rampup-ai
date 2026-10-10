@@ -12,6 +12,7 @@ import type { ExplainResponse } from "../lib/api"
 export default function Inbox() {
   const navigate = useNavigate()
   const [text, setText] = useState("")
+  const [codeMode, setCodeMode] = useState(false)
   const [loading, setLoading] = useState(false)
   const [streamText, setStreamText] = useState("")
   const [result, setResult] = useState<ExplainResponse | null>(null)
@@ -25,7 +26,7 @@ export default function Inbox() {
     setResult(null)
     setStreamText("")
     try {
-      const data = await explainTextStream(text, (chunk) => setStreamText((s) => s + chunk))
+      const data = await explainTextStream(text, (chunk) => setStreamText((s) => s + chunk), codeMode ? "code" : "auto")
       setResult(data)
       if (!data.saved) {
         toast("Couldn't save this to your history", { icon: "⚠️" })
@@ -44,7 +45,14 @@ export default function Inbox() {
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="mb-6 text-2xl font-semibold text-white">Explain This</h1>
-      <PasteInbox text={text} onTextChange={setText} onSubmit={handleSubmit} loading={loading} />
+      <PasteInbox
+        text={text}
+        onTextChange={setText}
+        codeMode={codeMode}
+        onCodeModeChange={setCodeMode}
+        onSubmit={handleSubmit}
+        loading={loading}
+      />
       {loading && !result && streamText && (
         <pre className="mt-6 whitespace-pre-wrap rounded-xl border border-border bg-panel p-4 font-sans text-sm text-neutral-400">
           {streamText}

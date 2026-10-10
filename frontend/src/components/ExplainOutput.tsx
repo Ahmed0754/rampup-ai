@@ -1,7 +1,9 @@
+import type { ReactNode } from "react"
 import type { ExplainResponse } from "../lib/api"
 
 const TYPE_LABELS: Record<string, string> = {
   error: "Terminal Error",
+  code: "Code",
   slack: "Slack Message",
   email: "Email",
   jira: "Jira Ticket",
@@ -10,12 +12,35 @@ const TYPE_LABELS: Record<string, string> = {
   other: "Message",
 }
 
+// Code and errors get a debugging-oriented explanation; the section headings follow suit.
+const HEADINGS: Record<string, { meaning: string; next: string; items: string }> = {
+  code: { meaning: "What this code does", next: "Check this first", items: "Steps to dig in" },
+  error: { meaning: "What this error means", next: "Check this first", items: "Debugging steps" },
+}
+const DEFAULT_HEADINGS = { meaning: "What this means", next: "What to do next", items: "Action items" }
+
+// Code explanations wrap identifiers in `backticks`; show those as inline code.
+function withInlineCode(text: string): ReactNode[] {
+  return text.split(/`([^`\n]+)`/).map((part, i) =>
+    i % 2 === 1 ? (
+      <code key={i} className="rounded bg-white/10 px-1 py-0.5 font-mono text-[0.9em]">
+        {part}
+      </code>
+    ) : (
+      part
+    ),
+  )
+}
+
 interface ExplainOutputProps {
   result: ExplainResponse
   onGenerateReply: () => void
 }
 
 export default function ExplainOutput({ result, onGenerateReply }: ExplainOutputProps) {
+  const headings = HEADINGS[result.input_type] ?? DEFAULT_HEADINGS
+  const isCode = result.input_type in HEADINGS
+
   return (
     <div className="mt-6 space-y-4">
       <span className="inline-block rounded-full bg-accent/20 px-3 py-1 text-xs font-medium text-accent">
@@ -23,23 +48,32 @@ export default function ExplainOutput({ result, onGenerateReply }: ExplainOutput
       </span>
 
       <div className="rounded-xl border border-border bg-panel p-5">
-        <h3 className="mb-2 text-sm font-medium text-neutral-400">What this means</h3>
-        <p className="text-white">{result.explanation}</p>
-        <p className="mt-3 text-sm text-neutral-300">{result.what_they_mean}</p>
+        <h3 className="mb-2 text-sm font-medium text-neutral-400">{headings.meaning}</h3>
+        <p className="text-white">{withInlineCode(result.explanation)}</p>
+        {isCode ? (
+          <>
+            <h3 className="mb-2 mt-4 text-sm font-medium text-neutral-400">
+              {result.input_type === "error" ? "Most likely cause" : "Where it could break"}
+            </h3>
+            <p className="text-sm text-neutral-300">{withInlineCode(result.what_they_mean)}</p>
+          </>
+        ) : (
+          <p className="mt-3 text-sm text-neutral-300">{withInlineCode(result.what_they_mean)}</p>
+        )}
       </div>
 
       <div className="rounded-xl border border-accent/40 bg-accent/10 p-5">
-        <h3 className="mb-2 text-sm font-medium text-accent">What to do next</h3>
-        <p className="text-white">{result.what_to_do_next}</p>
+        <h3 className="mb-2 text-sm font-medium text-accent">{headings.next}</h3>
+        <p className="text-white">{withInlineCode(result.what_to_do_next)}</p>
       </div>
 
       <div className="rounded-xl border border-border bg-panel p-5">
-        <h3 className="mb-3 text-sm font-medium text-neutral-400">Action items</h3>
+        <h3 className="mb-3 text-sm font-medium text-neutral-400">{headings.items}</h3>
         <ul className="space-y-2">
           {result.action_items.map((item, i) => (
             <li key={i} className="flex items-start gap-2 text-sm text-white">
               <input type="checkbox" className="mt-1 accent-accent" />
-              {item}
+              {withInlineCode(item)}
             </li>
           ))}
         </ul>
