@@ -18,15 +18,30 @@ function escapeHtml(s) {
   return div.innerHTML
 }
 
+// Same headings the web app uses: code and errors get a debugging-oriented layout.
+const HEADINGS = {
+  code: { meaning: "What this code does", cause: "Where it could break", next: "Check this first", items: "Steps to dig in" },
+  error: { meaning: "What this error means", cause: "Most likely cause", next: "Check this first", items: "Debugging steps" },
+}
+const DEFAULT_HEADINGS = { meaning: "What this means", cause: null, next: "What to do next", items: "Action items" }
+
+// Escape first, then turn `identifiers` into <code> - backticks survive escaping.
+function formatText(s) {
+  return escapeHtml(s || "").replace(/`([^`\n]+)`/g, "<code>$1</code>")
+}
+
 function render(result) {
-  const items = (result.action_items || []).map((i) => `<li>${escapeHtml(i)}</li>`).join("")
+  const h = HEADINGS[result.input_type] || DEFAULT_HEADINGS
+  const items = (result.action_items || []).map((i) => `<li>${formatText(i)}</li>`).join("")
+  const cause = h.cause ? `<h2>${h.cause}</h2><p>${formatText(result.what_they_mean)}</p>` : ""
   contentEl.innerHTML = `
     <span class="tag">${escapeHtml(result.input_type || "")}</span>
-    <h2>What this means</h2>
-    <p>${escapeHtml(result.explanation || "")}</p>
-    <h2>What to do next</h2>
-    <p>${escapeHtml(result.what_to_do_next || "")}</p>
-    <h2>Action items</h2>
+    <h2>${h.meaning}</h2>
+    <p>${formatText(result.explanation)}</p>
+    ${cause}
+    <h2>${h.next}</h2>
+    <p>${formatText(result.what_to_do_next)}</p>
+    <h2>${h.items}</h2>
     <ul>${items}</ul>
   `
 }
