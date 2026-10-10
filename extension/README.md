@@ -1,7 +1,7 @@
 # RampUp AI browser extension
 
-Select any text on a page, right-click, and choose **"Explain with RampUp AI"** — no
-copy-pasting into the app. Chrome/Edge (Manifest V3). Talks straight to your backend and
+Select any text on a page, right-click, and choose **"Explain with RampUp AI"** or
+**"Draft a reply with RampUp AI"** — no copy-pasting into the app. Chrome/Edge (Manifest V3). Talks straight to your backend and
 Supabase project; there's no separate server for the extension itself.
 
 ## Install (unpacked)
@@ -9,10 +9,16 @@ Supabase project; there's no separate server for the extension itself.
 1. `chrome://extensions` (or `edge://extensions`) → enable **Developer mode**.
 2. **Load unpacked** → select this `extension/` folder.
 3. Click the RampUp AI icon in the toolbar and log in with your RampUp AI account.
-4. Select text on any page → right-click → **Explain with RampUp AI**.
+4. Select text on any page → right-click → **Explain with RampUp AI** or **Draft a reply with
+   RampUp AI**.
 
 The explanation streams into a small popup window, and it's saved to your History exactly
-like using the web app.
+like using the web app. Underneath it, pick a tone (casual, professional, manager-safe, or
+confused-but-trying) to draft a reply, then copy it. "Draft a reply" skips the explanation
+and goes straight to the tone picker.
+
+Updating from an older version? Hit the reload button on the extension's card in
+`chrome://extensions` to pick up new menu items.
 
 ## Configuration
 
@@ -27,14 +33,15 @@ either:
 
 ## How it works
 
-- `background.js` registers the right-click menu item and opens `result.html` in a small
-  popup window with the selected text in the URL.
+- `background.js` registers the right-click menu items and opens `result.html` in a small
+  popup window with the selected text (and `mode=explain` or `mode=reply`) in the URL.
 - `popup.html`/`popup.js` is a small login form. It calls Supabase Auth's REST API directly
   (no supabase-js dependency) and stores the session in `chrome.storage.local`, refreshing
   it automatically when it's close to expiring.
-- `result.html`/`result.js` calls the backend's streamed `/api/explain` endpoint with the
-  stored session's access token and renders the same newline-delimited-JSON stream the web
-  app consumes, live, then swaps to the formatted result once it's done.
+- `result.html`/`result.js` calls the backend's streamed `/api/explain` and `/api/reply`
+  endpoints with the stored session's access token and renders the same
+  newline-delimited-JSON stream the web app consumes, live, then swaps to the formatted
+  result once it's done. Replies drafted after an explanation are linked to it in History.
 - `lib.js` holds the shared auth/streaming logic, loaded as a plain script by both pages —
   no build step, no bundler, no dependencies.
 

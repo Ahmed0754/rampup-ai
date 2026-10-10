@@ -8,11 +8,18 @@ const DEFAULT_CONFIG = {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxkb3JhdW1xbWFpeHBmdXVjbml2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0OTEzOTMsImV4cCI6MjEwNDA2NzM5M30.N9qNinBlOa8XjKIjERB9nm74O5xp2Zj7M3aYeVJN2VI",
 }
 
+const MENU_ITEMS = {
+  "rampup-explain": { title: "Explain with RampUp AI", mode: "explain" },
+  "rampup-reply": { title: "Draft a reply with RampUp AI", mode: "reply" },
+}
+
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: "rampup-explain",
-    title: "Explain with RampUp AI",
-    contexts: ["selection"],
+  // onInstalled also fires on every extension update/reload, and creating an
+  // item whose id already exists errors - so start from a clean menu.
+  chrome.contextMenus.removeAll(() => {
+    for (const [id, { title }] of Object.entries(MENU_ITEMS)) {
+      chrome.contextMenus.create({ id, title, contexts: ["selection"] })
+    }
   })
 
   chrome.storage.local.get(["apiBaseUrl", "supabaseUrl", "supabaseAnonKey"], (existing) => {
@@ -25,7 +32,9 @@ chrome.runtime.onInstalled.addListener(() => {
 })
 
 chrome.contextMenus.onClicked.addListener((info) => {
-  if (info.menuItemId !== "rampup-explain" || !info.selectionText) return
-  const url = chrome.runtime.getURL("result.html") + "?text=" + encodeURIComponent(info.selectionText)
+  const item = MENU_ITEMS[info.menuItemId]
+  if (!item || !info.selectionText) return
+  const params = new URLSearchParams({ mode: item.mode, text: info.selectionText })
+  const url = chrome.runtime.getURL("result.html") + "?" + params
   chrome.windows.create({ url, type: "popup", width: 420, height: 640 })
 })
