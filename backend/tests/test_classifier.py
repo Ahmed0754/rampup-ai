@@ -149,3 +149,22 @@ def test_prose_with_a_single_semicolon_line_is_not_code():
 def test_lowercase_select_in_prose_is_not_sql():
     text = "Please select the right template\nfrom the dropdown before the meeting."
     assert classify_input(text) == "meeting_note"
+
+
+def test_classify_python_with_block_headers_and_statements_as_code():
+    # Regression: only the def and return lines used to count as code here,
+    # so this landed under "other" and got the chat-message prompt.
+    text = (
+        "def apply_discount(order, codes=[]):\n"
+        "    for code in order.promo_codes:\n"
+        "        codes.append(code)\n"
+        '    if "WELCOME10" in codes:\n'
+        "        order.total = order.total * 0.9\n"
+        "    return order"
+    )
+    assert classify_input(text) == "code"
+
+
+def test_chat_message_with_a_colon_line_is_not_code():
+    text = "@priya if you get a chance today:\ncould you look at the deploy failure from this morning? thanks!"
+    assert classify_input(text) == "slack"

@@ -33,6 +33,9 @@ _CODE_LINE_PATTERNS = [
     re.compile(r"[{};]\s*$|\):\s*$|=>"),
     re.compile(r"^\s*(?:SELECT|INSERT INTO|UPDATE|DELETE FROM|CREATE TABLE|ALTER TABLE)\b"),
     re.compile(r"&&|\|\||!==?|===?|::|->"),
+    re.compile(r"^\s*(?:if|for|while|with|elif|else)\b.*:\s*$"),  # Python block headers
+    re.compile(r"^\s*[\w.]+\(.*\)\s*$"),  # bare call statement: codes.append(code)
+    re.compile(r"^\s*[\w.\[\]]+\s*[-+*/]?=\s*\S"),  # assignment: order.total = ...
 ]
 # A pasted snippet needs at least this many code-looking lines, making up at
 # least this share of the non-empty lines, so a chat message that mentions a
