@@ -152,6 +152,25 @@ Run it locally with `cd backend && python -m scripts.weekly_nudge` (needs the sa
 
 ## Deployment
 
-- **Frontend:** deploy `frontend/` to Vercel using the root `vercel.json`.
-- **Backend:** build and run `backend/Dockerfile` on any container host (Fly.io, Render, Railway,
-  ECS, etc.), with the same environment variables as `backend/.env.example`.
+Both pieces fit on free tiers.
+
+**Backend → Render.** Render dashboard → **New → Blueprint** → pick this repo. It reads
+`render.yaml` and asks for the secrets: `GEMINI_API_KEY`, `GROQ_API_KEY` (optional),
+`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET` (optional), and `CORS_ORIGINS`
+(your Vercel URL, once you have it). Free services sleep after 15 minutes idle, so the first
+request after a quiet spell takes ~30-60s.
+
+**Frontend → Vercel.** Vercel dashboard → **Add New → Project** → import this repo; the root
+`vercel.json` handles the build. Add these environment variables, then deploy:
+`VITE_API_URL` (your Render URL), `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+
+**Then:**
+
+- Set `CORS_ORIGINS` on Render to your Vercel URL.
+- Supabase → **Authentication → URL Configuration**: set **Site URL** to your Vercel URL so
+  sign-up confirmation links point at the deployed app.
+- Add a `FRONTEND_URL` GitHub Actions secret (your Vercel URL) so nudge emails link to the app.
+- In the extension popup → **Settings**, set the API base URL to your Render URL.
+
+The backend also runs anywhere else that takes a Dockerfile (Fly.io, Railway, ECS, ...) with
+the variables from `backend/.env.example`; it listens on `$PORT` (default 8000).
