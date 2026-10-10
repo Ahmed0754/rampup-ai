@@ -52,41 +52,8 @@ rampup-ai/
   Weekly Summary always has something to work with.
 - **History** — browse everything you've explained, replied to, summarized, or turned into resume
   bullets, scoped to your account.
-- **Browser extension** — select text anywhere, right-click, and get an explanation without
-  copy-pasting into the app. See [extension/README.md](extension/README.md).
-
-## Getting started
-
-### 1. Supabase
-
-Create a Supabase project and run `supabase/schema.sql` in the SQL editor. This creates the
-`pastes`, `replies`, `progress_entries`, `weekly_summaries`, `resume_bullets`,
-`explain_chat_messages`, `glossary_terms`, and `mentor_questions` tables with row-level security scoped to `auth.uid()`.
-
-If you set the project up earlier, apply new tables by running the files in
-`supabase/migrations/` in order.
-
-### 2. Backend
-
-Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
-(sign in with a Google account — no credit card, generous free tier).
-
-Optionally, get a free key from [Groq](https://console.groq.com/keys) too and set it as
-`GROQ_API_KEY`. If Gemini fails or is rate-limited, the same request automatically retries against
-Groq instead of erroring out — skipped entirely if unset.
-
-```bash
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # fill in GEMINI_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY
-uvicorn app.main:app --reload
-```
-
-The API is served at `http://localhost:8000`, with a health check at `GET /health`.
-
-Two more `.env` vars are optional locally but matter once you deploy:
-
+- **Browser extension** — select text anywhere, right-click, and get an explanation or a
+  ready-to-send reply without copy-pasting into the app. See [extension/README.md](extension/README.md).
 - `CORS_ORIGINS` - comma-separated frontend origins allowed to call the API. Defaults to the
   local Vite dev ports; set it to your deployed frontend's URL (e.g. `https://your-app.vercel.app`)
   in production.
