@@ -82,18 +82,18 @@ async function getValidSession() {
 
 // Same newline-delimited-JSON streaming contract the web app's api.ts uses:
 // {"type":"chunk","text":"..."} pieces, then one {"type":"done", ...fields}.
-async function streamExplain(text, onChunk) {
+async function streamNdjson(path, body, onChunk) {
   const { apiBaseUrl } = await getConfig()
   const session = await getValidSession()
   if (!session) throw new Error("NOT_LOGGED_IN")
 
-  const res = await fetch(`${apiBaseUrl}/api/explain`, {
+  const res = await fetch(`${apiBaseUrl}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${session.access_token}`,
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify(body),
   })
 
   if (!res.ok) {
@@ -126,4 +126,14 @@ async function streamExplain(text, onChunk) {
   }
   if (!done) throw new Error("Something went wrong")
   return done
+}
+
+function streamExplain(text, onChunk) {
+  return streamNdjson("/api/explain", { text }, onChunk)
+}
+
+// pasteId links the reply to its explanation in History; null when replying
+// straight from the context menu without explaining first.
+function streamReply(text, tone, pasteId, onChunk) {
+  return streamNdjson("/api/reply", { text, tone, paste_id: pasteId }, onChunk)
 }

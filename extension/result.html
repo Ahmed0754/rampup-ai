@@ -48,10 +48,59 @@
         color: #f87171;
         font-size: 13px;
       }
+      .quote {
+        color: #a3a3a3;
+        border-left: 2px solid #262626;
+        padding-left: 8px;
+      }
+      .tones {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      button {
+        font: inherit;
+        font-size: 12px;
+        color: #d4d4d4;
+        background: transparent;
+        border: 1px solid #262626;
+        border-radius: 8px;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      button:hover:not(:disabled) {
+        color: #fff;
+        border-color: #7c3aed;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      button.active {
+        background: #7c3aed;
+        border-color: #7c3aed;
+        color: #fff;
+        opacity: 1;
+      }
+      .reply-box {
+        font-size: 13px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        margin-top: 10px;
+        background: #171717;
+        border: 1px solid #262626;
+        border-radius: 8px;
+        padding: 10px;
+      }
+      .copy {
+        margin-top: 8px;
+      }
     </style>
   </head>
   <body>
     <div id="content"><p class="loading">Explaining…</p></div>
+    <div id="reply"></div>
     <script src="lib.js"></script>
     <script src="result.js"></script>
   </body>
