@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from app.deps import get_current_user_id
 from app.models import ExplainChatRequest, ExplainRequest
-from app.services.ai import AIService, AIServiceError, parse_explain_sections
+from app.services.ai import CODE_INPUT_TYPES, AIService, AIServiceError, parse_explain_sections
 from app.services.classifier import classify_input
 from app.services.supabase import (
     get_explain_chat_messages,
@@ -26,6 +26,8 @@ def explain(payload: ExplainRequest, user_id: str = Depends(get_current_user_id)
         raise HTTPException(status_code=422, detail="Please paste some text first")
 
     input_type = classify_input(text)
+    if payload.mode == "code" and input_type not in CODE_INPUT_TYPES:
+        input_type = "code"
 
     try:
         service = AIService()

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -10,6 +10,8 @@ MAX_INPUT_CHARS = 15_000
 
 class ExplainRequest(BaseModel):
     text: str = Field(max_length=MAX_INPUT_CHARS)
+    # "code" forces the code-focused explanation when auto-detection misses a snippet.
+    mode: Literal["auto", "code"] = "auto"
 
 
 class ExplainResponse(BaseModel):

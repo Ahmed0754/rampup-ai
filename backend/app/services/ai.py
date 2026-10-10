@@ -33,6 +33,11 @@ TONE_INSTRUCTIONS = {
 }
 
 
+# Input types explained with the code-focused prompt (what it does, where it
+# breaks, what to check) instead of the general "what does this person want" one.
+CODE_INPUT_TYPES = {"code", "error"}
+
+
 class AIServiceError(Exception):
     pass
 
@@ -119,6 +124,9 @@ class AIService:
                     raise AIServiceError("AI service unavailable") from fallback_exc
 
     def explain_stream(self, text: str, input_type: str) -> Iterator[str]:
+        if input_type in CODE_INPUT_TYPES:
+            yield from self._stream(_code_explain_prompt(text, input_type))
+            return
         prompt = f"""You are a senior engineer helping a confused intern understand something at work.
 The intern pasted the following {input_type}:
 
@@ -331,6 +339,32 @@ Respond in JSON with:
             "resume_bullets": _as_list(data.get("resume_bullets")),
             "talking_points": _as_list(data.get("talking_points")),
         }
+
+
+def _code_explain_prompt(text: str, input_type: str) -> str:
+    if input_type == "error":
+        subject = "error output"
+        sections = """EXPLANATION: <2-3 sentences: what this error means in plain English, and where it was raised if the output shows it>
+WHAT_THEY_MEAN: <1-2 sentences: the most likely root cause, and a runner-up if it's genuinely ambiguous>
+WHAT_TO_DO_NEXT: <1 sentence: the first thing to check or try>"""
+    else:
+        subject = "code"
+        sections = """EXPLANATION: <2-3 sentences: what this code does, in plain English>
+WHAT_THEY_MEAN: <1-2 sentences: where it's most likely to break, or anything that looks like a bug or a gotcha; say so plainly if nothing stands out>
+WHAT_TO_DO_NEXT: <1 sentence: the single most useful thing to check or understand next>"""
+    return f"""You are a senior engineer helping an intern who is new to this codebase.
+They pasted this {subject}:
+
+{text}
+
+Respond in exactly this plain-text format (no markdown headings, no JSON):
+{sections}
+ACTION_ITEMS:
+- <concrete step: a command to run, a file/line/function to look at, a log to read, or a value to print>
+- <concrete step>
+
+Include 2-4 action items. Refer to identifiers from the snippet in `backticks`. Don't rewrite the
+whole snippet. Be direct, and assume the intern is smart but unfamiliar with the codebase."""
 
 
 def _groq_headers() -> dict:

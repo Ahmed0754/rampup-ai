@@ -134,3 +134,39 @@ def test_explain_falls_back_when_model_ignores_format(client, auth_headers):
     done = next(e for e in _parse_ndjson(response) if e["type"] == "done")
     assert done["explanation"] == "just a plain sentence, no markers"
     assert done["action_items"] == []
+
+
+def _done_event(response):
+    return next(e for e in _parse_ndjson(response) if e["type"] == "done")
+
+
+def test_explain_auto_detects_code(client, auth_headers):
+    service = _mock_service()
+    snippet = "def total(items):\n    return sum(i.price for i in items)\n\nprint(total(cart));"
+    with patch("app.routers.explain.AIService", return_value=service):
+        response = client.post("/api/explain", json={"text": snippet}, headers=auth_headers)
+    assert _done_event(response)["input_type"] == "code"
+    service.explain_stream.assert_called_once_with(snippet, "code")
+
+
+def test_explain_code_mode_overrides_detection(client, auth_headers):
+    service = _mock_service()
+    text = "x = items.reduce((a, b) => a + b)"
+    with patch("app.routers.explain.AIService", return_value=service):
+        response = client.post("/api/explain", json={"text": text, "mode": "code"}, headers=auth_headers)
+    assert _done_event(response)["input_type"] == "code"
+    service.explain_stream.assert_called_once_with(text, "code")
+
+
+def test_explain_code_mode_keeps_error_type(client, auth_headers):
+    service = _mock_service()
+    with patch("app.routers.explain.AIService", return_value=service):
+        response = client.post(
+            "/api/explain", json={"text": "TypeError: x is undefined", "mode": "code"}, headers=auth_headers
+        )
+    assert _done_event(response)["input_type"] == "error"
+
+
+def test_explain_rejects_unknown_mode(client, auth_headers):
+    response = client.post("/api/explain", json={"text": "hi", "mode": "poetry"}, headers=auth_headers)
+    assert response.status_code == 422

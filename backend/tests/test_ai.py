@@ -193,6 +193,38 @@ def test_explain_stream_yields_prompted_text(service):
     assert list(service.explain_stream("some error", "error")) == ["EXPLANATION: hi ", "there"]
 
 
+def _capture_stream_prompt(svc):
+    prompts = []
+
+    def fake_stream(prompt):
+        prompts.append(prompt)
+        return iter(["ok"])
+
+    svc._stream = fake_stream
+    return prompts
+
+
+def test_explain_stream_uses_code_prompt_for_code(service):
+    prompts = _capture_stream_prompt(service)
+    list(service.explain_stream("def f(): pass", "code"))
+    assert "They pasted this code:" in prompts[0]
+    assert "where it's most likely to break" in prompts[0]
+
+
+def test_explain_stream_uses_error_prompt_for_errors(service):
+    prompts = _capture_stream_prompt(service)
+    list(service.explain_stream("KeyError: 'id'", "error"))
+    assert "They pasted this error output:" in prompts[0]
+    assert "most likely root cause" in prompts[0]
+
+
+def test_explain_stream_uses_general_prompt_for_messages(service):
+    prompts = _capture_stream_prompt(service)
+    list(service.explain_stream("can you review my PR?", "slack"))
+    assert "pasted the following slack" in prompts[0]
+    assert "They pasted this code" not in prompts[0]
+
+
 def test_generate_reply_stream_yields_chunks(service):
     _stub_stream(service, ["yeah ", "for sure"])
     assert list(service.generate_reply_stream("ok?", "casual")) == ["yeah ", "for sure"]
