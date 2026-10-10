@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "RampUp AI",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Select any text on a page, right-click, and get a plain-English explanation or a ready-to-send reply from RampUp AI - no copy-paste into the app needed.",
   "action": {
     "default_popup": "popup.html"
@@ -12,6 +12,7 @@
   "permissions": ["contextMenus", "storage"],
   "host_permissions": [
     "http://localhost:8000/*",
+    "https://*.onrender.com/*",
     "https://ldoraumqmaixpfuucniv.supabase.co/*"
   ]
 }
